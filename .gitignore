@@ -31,7 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
-/src/main/java/com/sge/platforme_etude/service/user/
-/src/main/java/com/sge/platforme_etude/helper/security/
-/src/main/java/com/sge/platforme_etude/dto/authentification/
-/src/main/java/com/sge/platforme_etude/controller/
+

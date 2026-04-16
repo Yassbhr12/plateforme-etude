@@ -1,30 +1,32 @@
 package com.sge.platforme_etude.dto.authentification;
 
 import com.sge.platforme_etude.helper.enums.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class AuthResponse {
 
     private String token;
     private String type = "Bearer";
+    private String refreshToken;   // ← nouveau champ
     private Long id;
     private String login;
     private String nom;
     private String prenom;
     private Role role;
 
-    public AuthResponse(String token, Long id, @Email @Size(max = 150) String email, @Size(max = 100) String nom, @Size(max = 100) String prenom, Role role) {
 
-
+    public AuthResponse(String token, String refreshToken,
+                        Long id, String email,
+                        String nom, String prenom, Role role) {
+        this.token = token;
+        this.type = "Bearer";
+        this.refreshToken = refreshToken;
+        this.id = id;
+        this.login = email;
+        this.nom = nom;
+        this.prenom = prenom;
+        this.role = role;
     }
 }

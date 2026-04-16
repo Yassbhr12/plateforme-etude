@@ -33,11 +33,16 @@ public class UserService {
 
     private final JwtUtils jwtUtils;
 
-    public UserService(UserRepo userRepo, UserMapper userMapper, EmailService emailService, JwtUtils jwtUtils) {
+    private final RefreshTokenService refreshTokenService;
+
+    public UserService(UserRepo userRepo, UserMapper userMapper,
+                       EmailService emailService, JwtUtils jwtUtils,
+                       RefreshTokenService refreshTokenService) {
         this.userRepo = userRepo;
         this.userMapper = userMapper;
         this.emailService = emailService;
         this.jwtUtils = jwtUtils;
+        this.refreshTokenService = refreshTokenService;
     }
 
     private String generateValidationCode() {
@@ -92,43 +97,37 @@ public class UserService {
     }
 
     @Transactional
-    public String validateCode(ValidationCodeRequest validationCodeRequest) throws Exception{
+    public String[] validateCode(ValidationCodeRequest validationCodeRequest) throws Exception {
 
         User user = userRepo.findUserByEmail(validationCodeRequest.getEmail())
-                .orElseThrow(()-> new RuntimeException("User Not Found!"));
+                .orElseThrow(() -> new RuntimeException("User Not Found!"));
 
-        if (user.getValidationCode() == null) {
+        if (user.getValidationCode() == null)
             throw new Exception("Aucun code de validation trouvé. Veuillez vous reconnecter.");
-        }
 
-        if (user.getValidationCodeExpiration() == null) {
+        if (user.getValidationCodeExpiration() == null)
             throw new Exception("Code de validation expiré. Veuillez vous reconnecter.");
+
+        LocalDateTime expiration = user.getValidationCodeExpiration().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+
+        if (now.isAfter(expiration)) {
+            long secondesEcoulees = Duration.between(expiration, now).getSeconds();
+            throw new Exception("Le code a expiré il y a " + secondesEcoulees + " secondes.");
         }
 
-        LocalDateTime expiration = user.getValidationCodeExpiration()
-                .truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime now = LocalDateTime.now()
-                .truncatedTo(ChronoUnit.SECONDS);
-
-        if(now.isAfter(expiration)){
-            long secondesEcoulees = Duration.between(expiration,now).getSeconds();
-            throw new Exception("Le code a expiré il y a " + secondesEcoulees + " secondes. Veuillez vous reconnecter.");
-        }
-
-        String codeRecu = validationCodeRequest.getValidationCode().trim();
-        String codeStocke = user.getValidationCode().trim();
-
-        if(!codeStocke.equals(codeRecu)){
-            throw  new Exception("Code de validation incorrect");
-        }
+        if (!user.getValidationCode().trim().equals(validationCodeRequest.getValidationCode().trim()))
+            throw new Exception("Code de validation incorrect");
 
         user.setValidationCode(null);
         user.setValidationCodeExpiration(null);
-
         userRepo.save(user);
 
-        return jwtUtils.generateToken(user.getEmail(),user.getRole().name());
+        refreshTokenService.revokeAllUserTokens(user);
+        String accessToken = jwtUtils.generateToken(user.getEmail(), user.getRole().name());
+        String refreshToken = refreshTokenService.createRefreshToken(user.getId()).getToken();
 
+        return new String[]{accessToken, refreshToken};
     }
 
     public UserDto findUserById(Long id){

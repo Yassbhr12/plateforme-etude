@@ -38,21 +38,23 @@ public class SecurityConfig  {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Auth publique
+                        .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/login/validation").permitAll()
+                        .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/logout").permitAll()
 
-                        .requestMatchers("/api/cabinets/**").hasRole("ADMIN")
-                        .requestMatchers("/api/utilisateurs/**").hasRole("ADMIN")
-                        .requestMatchers("/api/medicaments/**").hasRole("ADMIN")
+                        // Admin uniquement
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/patients/**").hasAnyRole("ADMIN" , "MEDECIN" , "SECRETAIRE")
-                        .requestMatchers("/api/rendez-vous/**").hasAnyRole("ADMIN" , "MEDECIN" , "SECRETAIRE")
-                        .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN" , "MEDECIN" , "SECRETAIRE")
-
-                        .requestMatchers("/api/factures/**").hasAnyRole("ADMIN" , "SECRETAIRE")
-
-                        .requestMatchers("/api/dossier-medicaux/**").hasAnyRole("ADMIN" , "MEDECIN")
+                        // Utilisateur connecte (USER ou ADMIN)
+                        .requestMatchers("/api/me/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/profil/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/groupes/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/messages/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/commentaires/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers("/api/sessions/**").hasAnyRole("ADMIN", "USER")
 
                         .anyRequest().authenticated()
                 )
