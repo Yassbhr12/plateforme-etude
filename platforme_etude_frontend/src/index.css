@@ -1,0 +1,168 @@
+/* ═══════════════════════════════════════════════════════════
+   PLATFORME ETUDE — Design System
+   Theme: Calm 🧘 | Concentration 🎯 | Clarity 📊 | Motivation 🚀
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* ── CSS Custom Properties ─────────────────────────────── */
+:root {
+  /* ── Calm 🧘 — Deep navy & soft blues ── */
+  --calm-900: #0a0e27;
+  --calm-800: #111540;
+  --calm-700: #181d54;
+  --calm-600: #1e2566;
+  --calm-500: #2a3382;
+  --calm-400: #3b4aad;
+  --calm-300: #5b6ec4;
+  --calm-200: #8b9ad6;
+  --calm-100: #c5cde8;
+  --calm-50:  #e8ecf5;
+
+  /* ── Concentration 🎯 — Teal & Cyan ── */
+  --focus-900: #053535;
+  --focus-800: #0a4f4f;
+  --focus-700: #0e6b6b;
+  --focus-600: #128787;
+  --focus-500: #18a5a5;
+  --focus-400: #2ec4b6;
+  --focus-300: #5bd6c8;
+  --focus-200: #8ee8dc;
+  --focus-100: #c1f3ec;
+  --focus-50:  #e5faf6;
+
+  /* ── Clarity 📊 — Clean whites & light grays ── */
+  --clarity-900: #1a1a2e;
+  --clarity-800: #2d2d44;
+  --clarity-700: #43435e;
+  --clarity-600: #5c5c78;
+  --clarity-500: #787893;
+  --clarity-400: #9696ac;
+  --clarity-300: #b5b5c5;
+  --clarity-200: #d4d4de;
+  --clarity-100: #eaeaf0;
+  --clarity-50:  #f5f5f8;
+
+  /* ── Motivation 🚀 — Warm amber & golden ── */
+  --motive-900: #5c3a08;
+  --motive-800: #7a4e0a;
+  --motive-700: #9a630d;
+  --motive-600: #ba7810;
+  --motive-500: #e09415;
+  --motive-400: #f0a830;
+  --motive-300: #f4be5e;
+  --motive-200: #f8d48d;
+  --motive-100: #fbe8be;
+  --motive-50:  #fef5e0;
+
+  /* ── Semantic Colors ── */
+  --bg-primary: var(--calm-900);
+  --bg-secondary: var(--calm-800);
+  --bg-card: rgba(26, 32, 72, 0.6);
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --bg-glass-hover: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #ffffff;
+  --text-secondary: var(--clarity-300);
+  --text-muted: var(--clarity-500);
+  --text-accent: var(--focus-400);
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-focus: var(--focus-400);
+
+  --success: #34d399;
+  --error: #f87171;
+  --warning: var(--motive-400);
+
+  /* ── Gradients ── */
+  --gradient-primary: linear-gradient(135deg, var(--focus-500) 0%, var(--calm-500) 100%);
+  --gradient-warm: linear-gradient(135deg, var(--motive-500) 0%, var(--motive-400) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(46, 196, 182, 0.08) 0%, transparent 50%),
+                 radial-gradient(ellipse at 80% 20%, rgba(42, 51, 130, 0.15) 0%, transparent 50%),
+                 radial-gradient(ellipse at 50% 80%, rgba(224, 148, 21, 0.05) 0%, transparent 50%);
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(46, 196, 182, 0.15);
+  --shadow-glow-warm: 0 0 20px rgba(240, 168, 48, 0.15);
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', var(--font-sans);
+
+  /* ── Spacing ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset & Base ──────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--text-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--focus-300);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--clarity-700);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--clarity-600);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--focus-500);
+  color: var(--text-primary);
+}
