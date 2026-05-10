@@ -502,4 +502,31 @@ pie title Avancement global du projet
 
 ---
 
+## DevOps
+
+Ce projet utilise une approche DevOps afin d'automatiser le développement, les tests, la conteneurisation et le déploiement de l'application.
+
+### Technologies DevOps utilisées
+
+- Git et GitHub pour la gestion du code source
+- Docker pour la conteneurisation du frontend, du backend et de la base de données
+- Docker Compose pour orchestrer les services
+- GitHub Actions pour l'intégration continue et le déploiement continu
+- PostgreSQL comme base de données conteneurisée
+- Nginx comme serveur web et reverse proxy en production
+
+### Objectif CI/CD
+
+L'objectif du pipeline CI/CD est de vérifier automatiquement le projet à chaque modification du code.
+
+Le pipeline pourra faire les étapes suivantes :
+
+1. Récupérer le code depuis GitHub
+2. Installer les dépendances du frontend et du backend
+3. Lancer les tests
+4. Construire le frontend React/Vite
+5. Construire le backend Spring Boot
+6. Construire les images Docker
+7. Déployer l'application
+
 *Document généré le 08 Mai 2026 — Platforme Étude / SGE*
