@@ -1,0 +1,79 @@
+name: Platforme Etude CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  backend:
+    name: Backend Spring Boot
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: platforme_etude_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: Yassbhr12
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d platforme_etude_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build backend with Maven
+        working-directory: platforme_etude_backend
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/platforme_etude_db
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: Yassbhr12
+        run: mvn clean package
+
+  frontend:
+    name: Frontend React Vite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install frontend dependencies
+        working-directory: platforme_etude_frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: platforme_etude_frontend
+        run: npm run build
+
+  docker:
+    name: Docker Compose Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose file
+        run: docker compose config
