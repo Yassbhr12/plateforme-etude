@@ -4,6 +4,9 @@ import com.sge.platforme_etude.dto.CommentaireDto;
 import com.sge.platforme_etude.entite.Commentaire;
 import com.sge.platforme_etude.entite.SessionEtude;
 import com.sge.platforme_etude.entite.User;
+import com.sge.platforme_etude.helper.exceptions.BadRequestException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.CommentaireMapper;
 import com.sge.platforme_etude.repository.CommentaireRepo;
 import com.sge.platforme_etude.repository.SessionEtudeRepo;
@@ -31,12 +34,12 @@ public class CommentaireService {
     @Transactional
     public CommentaireDto createCommentaire(CommentaireDto dto) {
         if (dto.getUserId() == null) {
-            throw new RuntimeException("userId is required");
+            throw new BadRequestException("userId is required");
         }
         User user = userRepo.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         SessionEtude sessionEtude = sessionEtudeRepo.findById(dto.getSessionEtudeId())
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
 
         Commentaire commentaire = mapper.toEntity(dto, user, sessionEtude);
         return mapper.toDto(repo.save(commentaire));
@@ -51,7 +54,7 @@ public class CommentaireService {
     public CommentaireDto findCommentaireById(Long id) {
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Commentaire Not Found"));
+                .orElseThrow(() -> new NotFoundException("Commentaire Not Found"));
     }
 
     public List<CommentaireDto> findAllCommentaires() {
@@ -82,18 +85,18 @@ public class CommentaireService {
     @Transactional
     public CommentaireDto updateCommentaireById(CommentaireDto dto, Long id) {
         Commentaire commentaire = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Commentaire Not Found"));
+                .orElseThrow(() -> new NotFoundException("Commentaire Not Found"));
 
         User user = commentaire.getUser();
         if (dto.getUserId() != null) {
             user = userRepo.findById(dto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User Not Found"));
+                    .orElseThrow(() -> new NotFoundException("User Not Found"));
         }
 
         SessionEtude sessionEtude = commentaire.getSessionEtude();
         if (dto.getSessionEtudeId() != null) {
             sessionEtude = sessionEtudeRepo.findById(dto.getSessionEtudeId())
-                    .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                    .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
         }
 
         mapper.updateEntity(commentaire, dto, user, sessionEtude);
@@ -103,9 +106,9 @@ public class CommentaireService {
     @Transactional
     public CommentaireDto updateCommentaireById(CommentaireDto dto, Long id, Long currentUserId) {
         Commentaire commentaire = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Commentaire Not Found"));
+                .orElseThrow(() -> new NotFoundException("Commentaire Not Found"));
         if (commentaire.getUser() == null || !commentaire.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("Commentaire does not belong to current user");
+            throw new ForbiddenException("Commentaire does not belong to current user");
         }
         dto.setUserId(currentUserId);
         return updateCommentaireById(dto, id);
@@ -114,16 +117,16 @@ public class CommentaireService {
     @Transactional
     public void deleteCommentaireById(Long id) {
         Commentaire commentaire = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Commentaire Not Found"));
+                .orElseThrow(() -> new NotFoundException("Commentaire Not Found"));
         repo.delete(commentaire);
     }
 
     @Transactional
     public void deleteCommentaireById(Long id, Long currentUserId) {
         Commentaire commentaire = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Commentaire Not Found"));
+                .orElseThrow(() -> new NotFoundException("Commentaire Not Found"));
         if (commentaire.getUser() == null || !commentaire.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("Commentaire does not belong to current user");
+            throw new ForbiddenException("Commentaire does not belong to current user");
         }
         repo.delete(commentaire);
     }

@@ -5,10 +5,13 @@ import com.sge.platforme_etude.dto.DisponibiliteDto;
 import com.sge.platforme_etude.entite.Disponibilite;
 import com.sge.platforme_etude.entite.User;
 import com.sge.platforme_etude.helper.enums.Role;
+import com.sge.platforme_etude.helper.exceptions.BadRequestException;
+import com.sge.platforme_etude.helper.exceptions.ConflictException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.DisponibiliteMapper;
 import com.sge.platforme_etude.repository.DisponibiliteRepo;
 import com.sge.platforme_etude.repository.UserRepo;
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +34,10 @@ public class DisponibiliteService {
     @Transactional
     public DisponibiliteDto createDispo(DisponibiliteDto dto , Long userId){
         User user = userRepo.findById(userId)
-                .orElseThrow(()->new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
 
         if (!dto.getHeureDebut().isBefore(dto.getHeureFin())) {
-            throw new RuntimeException("heureDebut doit etre avant heureFin");
+            throw new BadRequestException("heureDebut doit etre avant heureFin");
         }
 
         Disponibilite disponibilite = mapper.toEntity(dto,user);
@@ -46,7 +49,7 @@ public class DisponibiliteService {
                     //Deux intervalles [start1, end1] et [start2, end2] se chevauchent si : start1 < end2 et start2 < end1
                     && dispo.getHeureDebut().isBefore(dto.getHeureFin())
                     && dto.getHeureDebut().isBefore(dispo.getHeureFin()) ){
-                throw new RuntimeException("Impossible d'avoir deux disponibilitees qui se chevauchent");
+                throw new ConflictException("Impossible d'avoir deux disponibilitees qui se chevauchent");
             }
         }
 
@@ -59,7 +62,7 @@ public class DisponibiliteService {
 
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(()->new RuntimeException("Disponibilite Not Found"));
+                .orElseThrow(() -> new NotFoundException("Disponibilite Not Found"));
     }
 
     public List<DisponibiliteDto> findAllDispo(){
@@ -81,17 +84,17 @@ public class DisponibiliteService {
     @Transactional
     public DisponibiliteDto updateDispoById(DisponibiliteDto dto , Long id , Long userId){
         Disponibilite disponibilite = repo.findById(id)
-                .orElseThrow(()->new RuntimeException("Disponibilite Not Found"));
+                .orElseThrow(() -> new NotFoundException("Disponibilite Not Found"));
 
         Long idUser = disponibilite.getUser().getId();
 
         if (userId != null) {
             if(!idUser.equals(userId)){
-                throw new RuntimeException("Cette disponibilite ne vous appartient pas");
+                throw new ForbiddenException("Cette disponibilite ne vous appartient pas");
             }
         }
 
-        User user = userRepo.findById(idUser).orElseThrow(()->new RuntimeException("User Not Found"));
+        User user = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("User Not Found"));
 
 //        if (dto.getUserId() != null) {
 //            user = userRepo.findById(dto.getUserId())
@@ -104,7 +107,7 @@ public class DisponibiliteService {
         Integer jourSemaine    = dto.getJourSemaine()!= null ? dto.getJourSemaine(): disponibilite.getJourSemaine();
 
         if (!heuredebut.isBefore(heureFin)) {
-            throw new RuntimeException("heureDebut doit etre avant heureFin");
+            throw new BadRequestException("heureDebut doit etre avant heureFin");
         }
 
         List<Disponibilite> disponibilitesUser = repo.findDisponibiliteByUserId(user.getId());
@@ -116,7 +119,7 @@ public class DisponibiliteService {
                         //Deux intervalles [start1, end1] et [start2, end2] se chevauchent si : start1 < end2 et start2 < end1
                         && dispo.getHeureDebut().isBefore(heureFin)
                         && heuredebut.isBefore(dispo.getHeureFin())) {
-                    throw new RuntimeException("Impossible d'avoir deux disponibilitees qui se chevauchent");
+                    throw new ConflictException("Impossible d'avoir deux disponibilitees qui se chevauchent");
                 }
             }
         }
@@ -131,13 +134,13 @@ public class DisponibiliteService {
     @Transactional
     public void deleteDispoById(Long id , Long userId){
         Disponibilite disponibilite = repo.findById(id)
-                .orElseThrow(()->new RuntimeException("Disponibilite Not Found"));
+                .orElseThrow(() -> new NotFoundException("Disponibilite Not Found"));
 
-        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException("User Not Found"));
+        User user = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User Not Found"));
         Long idUser = disponibilite.getUser().getId();
         if (userId != null) {
             if(!idUser.equals(userId) && !user.getRole().equals(Role.ROLE_ADMIN)){
-                throw new RuntimeException("Cette disponibilite ne vous appartient pas");
+                throw new ForbiddenException("Cette disponibilite ne vous appartient pas");
             }
         }
 

@@ -5,6 +5,10 @@ import com.sge.platforme_etude.entite.Matiere;
 import com.sge.platforme_etude.entite.ObjectifHebdo;
 import com.sge.platforme_etude.entite.User;
 import com.sge.platforme_etude.helper.enums.Role;
+import com.sge.platforme_etude.helper.exceptions.BadRequestException;
+import com.sge.platforme_etude.helper.exceptions.ConflictException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.ObjectifHebdoMapper;
 import com.sge.platforme_etude.repository.MatiereRepo;
 import com.sge.platforme_etude.repository.ObjectifHebdoRepo;
@@ -39,14 +43,14 @@ public class ObjectifHebdoService {
         LocalDate monday = normalizeToMonday(dto.getSemaine());
 
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         Matiere matiere = matiereRepo.findById(dto.getMatiereId())
-                .orElseThrow(() -> new RuntimeException("Matiere Not Found"));
+                .orElseThrow(() -> new NotFoundException("Matiere Not Found"));
 
         validateMatiereOwnership(matiere, user);
 
         if (repo.existsByUserIdAndMatiereIdAndSemaine(user.getId(), matiere.getId(), monday)) {
-            throw new RuntimeException("ObjectifHebdo already exists for this user, matiere and semaine");
+            throw new ConflictException("ObjectifHebdo already exists for this user, matiere and semaine");
         }
 
         ObjectifHebdo objectifHebdo = mapper.toEntity(dto, user, matiere);
@@ -56,7 +60,7 @@ public class ObjectifHebdoService {
 
     public List<ObjectifHebdoDto> findObjectifByUserIdAndSemaine(Long userId , LocalDate date){
         User user = userRepo.findById(userId)
-                .orElseThrow(()->new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         LocalDate monday = normalizeToMonday(date);
 
         return repo.findByUserIdAndSemaine(userId,monday)
@@ -68,7 +72,7 @@ public class ObjectifHebdoService {
     public ObjectifHebdoDto findObjectifHebdoById(Long id) {
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(() -> new RuntimeException("ObjectifHebdo Not Found"));
+                .orElseThrow(() -> new NotFoundException("ObjectifHebdo Not Found"));
     }
 
     public List<ObjectifHebdoDto> findAllObjectifsHebdo() {
@@ -102,33 +106,33 @@ public class ObjectifHebdoService {
     @Transactional
     public ObjectifHebdoDto updateObjectifHebdoById(ObjectifHebdoDto dto, Long id , Long userId) {
         ObjectifHebdo objectifHebdo = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("ObjectifHebdo Not Found"));
+                .orElseThrow(() -> new NotFoundException("ObjectifHebdo Not Found"));
 
         User user = userRepo.findById(userId)
-                .orElseThrow(()->new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         Long idUser = objectifHebdo.getUser().getId();
         if (!idUser.equals(userId)) {
-            throw new RuntimeException("Cette objectif ne vous appartient pas");
+            throw new ForbiddenException("Cette objectif ne vous appartient pas");
         }
 
         Matiere matiere = objectifHebdo.getMatiere();
         if (dto.getMatiereId() != null) {
             matiere = matiereRepo.findById(dto.getMatiereId())
-                    .orElseThrow(() -> new RuntimeException("Matiere Not Found"));
+                    .orElseThrow(() -> new NotFoundException("Matiere Not Found"));
         }
 
         validateMatiereOwnership(matiere, user);
 
         LocalDate semaine = dto.getSemaine() != null ? dto.getSemaine() : objectifHebdo.getSemaine();
         if (semaine == null) {
-            throw new RuntimeException("Semaine is required");
+            throw new BadRequestException("Semaine is required");
         }
         LocalDate monday = normalizeToMonday(semaine);
 
         repo.findByUserIdAndMatiereIdAndSemaine(user.getId(), matiere.getId(), monday)
                 .ifPresent(existing -> {
                     if (!Objects.equals(existing.getId(), objectifHebdo.getId())) {
-                        throw new RuntimeException("ObjectifHebdo already exists for this user, matiere and semaine");
+                        throw new ConflictException("ObjectifHebdo already exists for this user, matiere and semaine");
                     }
                 });
 
@@ -140,13 +144,13 @@ public class ObjectifHebdoService {
     @Transactional
     public void deleteObjectifHebdoById(Long id , Long userId) {
         ObjectifHebdo objectifHebdo = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("ObjectifHebdo Not Found"));
+                .orElseThrow(() -> new NotFoundException("ObjectifHebdo Not Found"));
 
-        User user = userRepo.findById(userId).orElseThrow(()-> new RuntimeException("User Not Found"));
+        User user = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User Not Found"));
         Long idUser = objectifHebdo.getUser().getId();
         if (userId != null) {
             if(!idUser.equals(userId) && !user.getRole().equals(Role.ROLE_ADMIN)){
-                throw new RuntimeException("Cette objectif ne vous appartient pas");
+                throw new ForbiddenException("Cette objectif ne vous appartient pas");
             }
         }
         repo.delete(objectifHebdo);
@@ -157,16 +161,16 @@ public class ObjectifHebdoService {
 //            throw new RuntimeException("User id is required");
 //        }
         if (dto.getMatiereId() == null) {
-            throw new RuntimeException("Matiere id is required");
+            throw new BadRequestException("Matiere id is required");
         }
         if (dto.getSemaine() == null) {
-            throw new RuntimeException("Semaine is required");
+            throw new BadRequestException("Semaine is required");
         }
     }
 
     private void validateMatiereOwnership(Matiere matiere, User user) {
         if (matiere.getUser() == null || !Objects.equals(matiere.getUser().getId(), user.getId())) {
-            throw new RuntimeException("Matiere does not belong to the user");
+            throw new ForbiddenException("Matiere does not belong to the user");
         }
     }
 

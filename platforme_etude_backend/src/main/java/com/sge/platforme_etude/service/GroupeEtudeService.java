@@ -8,6 +8,9 @@ import com.sge.platforme_etude.entite.Notification;
 import com.sge.platforme_etude.entite.User;
 import com.sge.platforme_etude.helper.enums.StatutInvitation;
 import com.sge.platforme_etude.helper.enums.TypeNotif;
+import com.sge.platforme_etude.helper.exceptions.BadRequestException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.GroupeEtudeMapper;
 import com.sge.platforme_etude.repository.GroupeEtudeRepo;
 import com.sge.platforme_etude.repository.InvitationRepo;
@@ -43,14 +46,14 @@ public class GroupeEtudeService {
     @Transactional
     public GroupeEtudeDto createGroupeEtude(GroupeEtudeDto dto) {
         if (dto.getAdminId() == null) {
-            throw new RuntimeException("Admin is required");
+            throw new BadRequestException("Admin is required");
         }
 
         User admin = userRepo.findById(dto.getAdminId())
-                .orElseThrow(() -> new RuntimeException("Admin Not Found"));
+                .orElseThrow(() -> new NotFoundException("Admin Not Found"));
 
         List<User> users = dto.getUsers() == null ? new ArrayList<>() : dto.getUsers().stream()
-                .map(u -> userRepo.findById(u.getId()).orElseThrow(() -> new RuntimeException("User Not Found")))
+                .map(u -> userRepo.findById(u.getId()).orElseThrow(() -> new NotFoundException("User Not Found")))
                 .distinct()
                 .toList();
 
@@ -109,7 +112,7 @@ public class GroupeEtudeService {
     public GroupeEtudeDto findGroupeEtudeById(Long id) {
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
     }
 
     public List<GroupeEtudeDto> findAllGroupesEtude() {
@@ -121,7 +124,7 @@ public class GroupeEtudeService {
 
     public List<GroupeEtudeDto> findAllGroupesEtudeByAdminId(Long adminId){
         User admin = userRepo.findById(adminId)
-                .orElseThrow(()->new RuntimeException("Admin Not Found"));
+                .orElseThrow(() -> new NotFoundException("Admin Not Found"));
 
         List<GroupeEtude> groupeEtudes = repo.findGroupeEtudeByAdmin(admin);
 
@@ -134,7 +137,7 @@ public class GroupeEtudeService {
     @Transactional
     public GroupeEtudeDto updateGroupeEtudeById(GroupeEtudeDto dto, Long id) {
         GroupeEtude groupeEtude = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
 
         User admin = groupeEtude.getAdmin();
 //        if (dto.getAdminId() != null && !dto.getAdminId().equals(admin.getId())) {
@@ -190,7 +193,7 @@ public class GroupeEtudeService {
                     continue;
                 }
                 User receiver = userRepo.findById(candidateId)
-                        .orElseThrow(() -> new RuntimeException("User Not Found: "));
+                        .orElseThrow(() -> new NotFoundException("User Not Found"));
 
                 Invitation invitation = new Invitation();
                 invitation.setStatut(StatutInvitation.EN_ATTENTE);
@@ -225,9 +228,9 @@ public class GroupeEtudeService {
     @Transactional
     public GroupeEtudeDto updateGroupeEtudeByIdForCurrentUser(GroupeEtudeDto dto, Long id, Long currentUserId) {
         GroupeEtude groupeEtude = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
         if (groupeEtude.getAdmin() == null || !groupeEtude.getAdmin().getId().equals(currentUserId)) {
-            throw new RuntimeException("Only group admin can update this group");
+            throw new ForbiddenException("Only group admin can update this group");
         }
         return updateGroupeEtudeById(dto, id);
     }
@@ -235,16 +238,16 @@ public class GroupeEtudeService {
     @Transactional
     public void deleteGroupeEtudeById(Long id) {
         GroupeEtude groupeEtude = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
         repo.delete(groupeEtude);
     }
 
     @Transactional
     public void deleteGroupeEtudeByIdForCurrentUser(Long id, Long currentUserId) {
         GroupeEtude groupeEtude = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
         if (groupeEtude.getAdmin() == null || !groupeEtude.getAdmin().getId().equals(currentUserId)) {
-            throw new RuntimeException("Only group admin can delete this group");
+            throw new ForbiddenException("Only group admin can delete this group");
         }
         repo.delete(groupeEtude);
     }

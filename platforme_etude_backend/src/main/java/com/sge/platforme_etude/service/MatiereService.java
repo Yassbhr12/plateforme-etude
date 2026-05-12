@@ -5,6 +5,8 @@ import com.sge.platforme_etude.dto.MatiereDto;
 import com.sge.platforme_etude.entite.Matiere;
 import com.sge.platforme_etude.entite.User;
 import com.sge.platforme_etude.helper.enums.Role;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.MatiereMapper;
 import com.sge.platforme_etude.repository.MatiereRepo;
 import com.sge.platforme_etude.repository.UserRepo;
@@ -30,7 +32,7 @@ public class MatiereService {
     @Transactional
     public MatiereDto createMatiere(MatiereDto dto,Long userId){
 
-        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User Not Found")) ;
+        User user = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User Not Found"));
         Matiere matiere = mapper.toEntity(dto,user);
         Matiere saved = repo.save(matiere);
 
@@ -40,7 +42,7 @@ public class MatiereService {
     public MatiereDto findMatiereById(Long id){
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(()-> new RuntimeException("Matiere Not Found"));
+                .orElseThrow(() -> new NotFoundException("Matiere Not Found"));
     }
 
     public List<MatiereDto> findAllMatieres(){
@@ -62,16 +64,16 @@ public class MatiereService {
     @Transactional
     public MatiereDto updateMatiereById(MatiereDto dto , Long id , Long userId){
 
-        Matiere matiere = repo.findById(id).orElseThrow(()-> new RuntimeException("Matiere Not Found"));
+        Matiere matiere = repo.findById(id).orElseThrow(() -> new NotFoundException("Matiere Not Found"));
 
         Long idUser = matiere.getUser().getId();
         if (userId != null) {
             if(!idUser.equals(userId)){
-                throw new RuntimeException("Cette matiere ne vous appartient pas");
+                throw new ForbiddenException("Cette matiere ne vous appartient pas");
             }
         }
 
-        User user = userRepo.findById(idUser).orElseThrow(()->new RuntimeException("User Not Found"));
+        User user = userRepo.findById(idUser).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         mapper.updateEntity(matiere,dto,user);
         Matiere updated = repo.save(matiere);
@@ -82,12 +84,12 @@ public class MatiereService {
     @Transactional
     public void deleteMatiereById(Long id , Long userId){
 
-        Matiere matiere = repo.findById(id).orElseThrow(()->new RuntimeException("Matiere Not Found"));
-        User user = userRepo.findById(userId).orElseThrow(()->new RuntimeException("User Not Found"));
+        Matiere matiere = repo.findById(id).orElseThrow(() -> new NotFoundException("Matiere Not Found"));
+        User user = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         Long idUser = matiere.getUser().getId();
         if (!idUser.equals(userId) && !user.getRole().equals(Role.ROLE_ADMIN)) {
-            throw new RuntimeException("Cette matiere ne vous appartient pas");
+            throw new ForbiddenException("Cette matiere ne vous appartient pas");
         }
 
         repo.delete(matiere);

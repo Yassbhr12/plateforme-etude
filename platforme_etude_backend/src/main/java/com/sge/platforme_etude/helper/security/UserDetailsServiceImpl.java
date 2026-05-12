@@ -2,6 +2,7 @@ package com.sge.platforme_etude.helper.security;
 
 
 import com.sge.platforme_etude.entite.User;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
 import com.sge.platforme_etude.repository.UserRepo;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,7 +28,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public @NotNull UserDetails loadUserByUsername(@NotNull String username) throws UsernameNotFoundException {
         User user = repo.findUserByEmail(username).orElseThrow(()->new UsernameNotFoundException("User Not Found"));
         if(!user.getActif()){
-            throw new RuntimeException("Compte desactive");
+            throw new ForbiddenException("Compte desactive");
         }
 
         return org.springframework.security.core.userdetails.User.builder()

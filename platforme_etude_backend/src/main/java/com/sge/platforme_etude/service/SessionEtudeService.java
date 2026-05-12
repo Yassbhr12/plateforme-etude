@@ -3,6 +3,10 @@ package com.sge.platforme_etude.service;
 import com.sge.platforme_etude.dto.SessionEtudeDto;
 import com.sge.platforme_etude.entite.*;
 import com.sge.platforme_etude.helper.enums.StatutSession;
+import com.sge.platforme_etude.helper.exceptions.BadRequestException;
+import com.sge.platforme_etude.helper.exceptions.ConflictException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.SessionEtudeMapper;
 import com.sge.platforme_etude.repository.*;
 import org.springframework.stereotype.Service;
@@ -67,7 +71,7 @@ public class SessionEtudeService {
             if (s.getStatut() == StatutSession.ANNULEE) continue;
             if (excludeSessionId != null && s.getId().equals(excludeSessionId)) continue;
             if (overlap(start, end, s.getDateDebut(), s.getDateFin())) {
-                throw new RuntimeException("Session overlaps with existing session id=" + s.getId());
+                throw new ConflictException("Session overlaps with existing session id=" + s.getId());
             }
         }
     }
@@ -230,9 +234,9 @@ public class SessionEtudeService {
 
     private SessionEtude getOwnedSessionOrThrow(Long sessionId, Long currentUserId) {
         SessionEtude sessionEtude = repo.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
         if (sessionEtude.getUser() == null || !sessionEtude.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("SessionEtude does not belong to current user");
+            throw new ForbiddenException("SessionEtude does not belong to current user");
         }
         return sessionEtude;
     }
@@ -240,7 +244,7 @@ public class SessionEtudeService {
 
     @Transactional
     public List<SessionEtudeDto> regenerateWeeklyPlan(Long userId , LocalDate anyDateOfWeek){
-        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User Not Found"));
+        User user = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User Not Found"));
 
         LocalDate monday = normalizeToMonday(anyDateOfWeek);
         LocalDateTime start = startOfWeek(monday);
@@ -286,17 +290,17 @@ public class SessionEtudeService {
 
     @Transactional
     public SessionEtudeDto createSession(SessionEtudeDto dto) {
-        if (dto.getUserId() == null) throw new RuntimeException("userId is required");
-        if (dto.getMatiereId() == null) throw new RuntimeException("matiereId is required");
-        if (dto.getDateDebut() == null || dto.getDateFin() == null) throw new RuntimeException("dates are required");
-        if (!dto.getDateDebut().isBefore(dto.getDateFin())) throw new RuntimeException("dateDebut must be before dateFin");
+        if (dto.getUserId() == null) throw new BadRequestException("userId is required");
+        if (dto.getMatiereId() == null) throw new BadRequestException("matiereId is required");
+        if (dto.getDateDebut() == null || dto.getDateFin() == null) throw new BadRequestException("dates are required");
+        if (!dto.getDateDebut().isBefore(dto.getDateFin())) throw new BadRequestException("dateDebut must be before dateFin");
 
-        User user = userRepo.findById(dto.getUserId()).orElseThrow(() -> new RuntimeException("User Not Found"));
-        Matiere matiere = matiereRepo.findById(dto.getMatiereId()).orElseThrow(() -> new RuntimeException("Matiere Not Found"));
+        User user = userRepo.findById(dto.getUserId()).orElseThrow(() -> new NotFoundException("User Not Found"));
+        Matiere matiere = matiereRepo.findById(dto.getMatiereId()).orElseThrow(() -> new NotFoundException("Matiere Not Found"));
 
         long minutes = Duration.between(dto.getDateDebut(), dto.getDateFin()).toMinutes();
-        if (minutes <= 0) throw new RuntimeException("Invalid session duration");
-        if (minutes > 180) throw new RuntimeException("Session duration must be <= 180 minutes");
+        if (minutes <= 0) throw new BadRequestException("Invalid session duration");
+        if (minutes > 180) throw new BadRequestException("Session duration must be <= 180 minutes");
 
         // Chevauchement avec sessions non annulees
         assertNoOverlap(user.getId(), dto.getDateDebut(), dto.getDateFin(), null);
@@ -313,7 +317,7 @@ public class SessionEtudeService {
 
         if (dto.getGroupeEtudeId() != null) {
             GroupeEtude g = groupeEtudeRepo.findById(dto.getGroupeEtudeId())
-                    .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                    .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
             s.setGroupeEtude(g);
         } else {
             s.setGroupeEtude(null);
@@ -331,12 +335,12 @@ public class SessionEtudeService {
     @Transactional
     public SessionEtudeDto updateSession(Long sessionId, SessionEtudeDto dto) {
         SessionEtude s = repo.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session Not Found"));
+                .orElseThrow(() -> new NotFoundException("Session Not Found"));
 
 
         if (s.getStatut() == StatutSession.TERMINEE &&
                 (dto.getDateDebut() != null || dto.getDateFin() != null)) {
-            throw new RuntimeException("Cannot change dates for a done session");
+            throw new BadRequestException("Cannot change dates for a done session");
         }
 
         if (dto.getTitre() != null) s.setTitre(dto.getTitre());
@@ -344,14 +348,14 @@ public class SessionEtudeService {
 
         if (dto.getMatiereId() != null) {
             Matiere matiere = matiereRepo.findById(dto.getMatiereId())
-                    .orElseThrow(() -> new RuntimeException("Matiere Not Found"));
+                    .orElseThrow(() -> new NotFoundException("Matiere Not Found"));
             s.setMatiere(matiere);
         }
 
 
         LocalDateTime newStart = dto.getDateDebut() != null ? dto.getDateDebut() : s.getDateDebut();
         LocalDateTime newEnd = dto.getDateFin() != null ? dto.getDateFin() : s.getDateFin();
-        if (!newStart.isBefore(newEnd)) throw new RuntimeException("dateDebut must be before dateFin");
+        if (!newStart.isBefore(newEnd)) throw new BadRequestException("dateDebut must be before dateFin");
 
         if (dto.getDateDebut() != null || dto.getDateFin() != null) {
             assertNoOverlap(s.getUser().getId(), newStart, newEnd, s.getId());
@@ -359,7 +363,7 @@ public class SessionEtudeService {
             s.setDateFin(newEnd);
 
             long minutes = Duration.between(newStart, newEnd).toMinutes();
-            if (minutes > 180) throw new RuntimeException("Session duration must be <= 180 minutes");
+            if (minutes > 180) throw new BadRequestException("Session duration must be <= 180 minutes");
             if (dto.getDureeMax() != null) s.setDureeMax(dto.getDureeMax());
             else s.setDureeMax((int) minutes);
         } else if (dto.getDureeMax() != null) {
@@ -372,7 +376,7 @@ public class SessionEtudeService {
 
         if (dto.getGroupeEtudeId() != null) {
             GroupeEtude g = groupeEtudeRepo.findById(dto.getGroupeEtudeId())
-                    .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                    .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
             s.setGroupeEtude(g);
         }
 
@@ -389,7 +393,7 @@ public class SessionEtudeService {
     @Transactional
     public void cancelSession(Long sessionId) {
         SessionEtude s = repo.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
         s.setStatut(StatutSession.ANNULEE);
         repo.save(s);
     }
@@ -404,7 +408,7 @@ public class SessionEtudeService {
     @Transactional
     public void markAsDone(Long sessionId) {
         SessionEtude s = repo.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
         if (s.getStatut() != StatutSession.ANNULEE) {
             s.setStatut(StatutSession.TERMINEE);
             repo.save(s);
@@ -424,7 +428,7 @@ public class SessionEtudeService {
     public SessionEtudeDto findSessionEtudeById(Long id) {
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
     }
 
     public List<SessionEtudeDto> findAllSessionsEtude() {
@@ -493,14 +497,14 @@ public class SessionEtudeService {
     @Transactional
     public SessionEtudeDto partagerSessionDansGroupe(Long sessionId, Long groupeEtudeId, Long userId) {
         SessionEtude sessionEtude = repo.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
 
         if (sessionEtude.getUser() == null || !sessionEtude.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Only the session owner can share it");
+            throw new ForbiddenException("Only the session owner can share it");
         }
 
         GroupeEtude groupeEtude = groupeEtudeRepo.findById(groupeEtudeId)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
 
         sessionEtude.setPrivee(false);
         sessionEtude.setGroupeEtude(groupeEtude);
@@ -511,7 +515,7 @@ public class SessionEtudeService {
     @Transactional
     public void deleteSessionEtudeById(Long id) {
         SessionEtude sessionEtude = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("SessionEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("SessionEtude Not Found"));
         repo.delete(sessionEtude);
     }
 

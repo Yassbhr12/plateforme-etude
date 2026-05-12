@@ -1,7 +1,9 @@
 package com.sge.platforme_etude.helper.exceptions;
 
-public class TokenException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class TokenException extends AppException {
     public TokenException(String message) {
-        super(message);
+        super(HttpStatus.UNAUTHORIZED, message, "TOKEN_ERROR");
     }
 }

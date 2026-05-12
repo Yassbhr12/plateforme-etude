@@ -4,6 +4,9 @@ import com.sge.platforme_etude.dto.MessageChatDto;
 import com.sge.platforme_etude.entite.GroupeEtude;
 import com.sge.platforme_etude.entite.MessageChat;
 import com.sge.platforme_etude.entite.User;
+import com.sge.platforme_etude.helper.exceptions.BadRequestException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.mapper.MessageChatMapper;
 import com.sge.platforme_etude.repository.GroupeEtudeRepo;
 import com.sge.platforme_etude.repository.MessageChatRepo;
@@ -31,12 +34,12 @@ public class MessageChatService {
     @Transactional
     public MessageChatDto createMessageChat(MessageChatDto dto , Long groupeId) {
         if (dto.getUserId() == null) {
-            throw new RuntimeException("userId is required");
+            throw new BadRequestException("userId is required");
         }
         User user = userRepo.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         GroupeEtude groupeEtude = groupeEtudeRepo.findById(groupeId)
-                .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
 
 
         MessageChat messageChat = mapper.toEntity(dto, user, groupeEtude);
@@ -52,7 +55,7 @@ public class MessageChatService {
     public MessageChatDto findMessageChatById(Long id) {
         return repo.findById(id)
                 .map(mapper::toDto)
-                .orElseThrow(() -> new RuntimeException("MessageChat Not Found"));
+                .orElseThrow(() -> new NotFoundException("MessageChat Not Found"));
     }
 
     public List<MessageChatDto> findAllMessagesChat() {
@@ -79,18 +82,18 @@ public class MessageChatService {
     @Transactional
     public MessageChatDto updateMessageChatById(MessageChatDto dto, Long id) {
         MessageChat messageChat = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("MessageChat Not Found"));
+                .orElseThrow(() -> new NotFoundException("MessageChat Not Found"));
 
         User user = messageChat.getUser();
         if (dto.getUserId() != null) {
             user = userRepo.findById(dto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User Not Found"));
+                    .orElseThrow(() -> new NotFoundException("User Not Found"));
         }
 
         GroupeEtude groupeEtude = messageChat.getGroupeEtude();
         if (dto.getGroupeEtudeId() != null) {
             groupeEtude = groupeEtudeRepo.findById(dto.getGroupeEtudeId())
-                    .orElseThrow(() -> new RuntimeException("GroupeEtude Not Found"));
+                    .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
         }
 
         mapper.updateEntity(messageChat, dto, user, groupeEtude);
@@ -100,9 +103,9 @@ public class MessageChatService {
     @Transactional
     public MessageChatDto updateMessageChatById(MessageChatDto dto, Long id, Long currentUserId) {
         MessageChat messageChat = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("MessageChat Not Found"));
+                .orElseThrow(() -> new NotFoundException("MessageChat Not Found"));
         if (messageChat.getUser() == null || !messageChat.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("Message does not belong to current user");
+            throw new ForbiddenException("Message does not belong to current user");
         }
         dto.setUserId(currentUserId);
         return updateMessageChatById(dto, id);
@@ -111,16 +114,16 @@ public class MessageChatService {
     @Transactional
     public void deleteMessageChatById(Long id) {
         MessageChat messageChat = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("MessageChat Not Found"));
+                .orElseThrow(() -> new NotFoundException("MessageChat Not Found"));
         repo.delete(messageChat);
     }
 
     @Transactional
     public void deleteMessageChatById(Long id, Long currentUserId) {
         MessageChat messageChat = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("MessageChat Not Found"));
+                .orElseThrow(() -> new NotFoundException("MessageChat Not Found"));
         if (messageChat.getUser() == null || !messageChat.getUser().getId().equals(currentUserId)) {
-            throw new RuntimeException("Message does not belong to current user");
+            throw new ForbiddenException("Message does not belong to current user");
         }
         repo.delete(messageChat);
     }

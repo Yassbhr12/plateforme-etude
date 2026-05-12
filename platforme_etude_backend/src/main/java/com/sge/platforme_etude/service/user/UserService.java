@@ -5,6 +5,10 @@ import com.sge.platforme_etude.dto.UserDto;
 import com.sge.platforme_etude.dto.authentification.AuthRequest;
 import com.sge.platforme_etude.dto.authentification.ValidationCodeRequest;
 import com.sge.platforme_etude.entite.User;
+import com.sge.platforme_etude.helper.exceptions.ConflictException;
+import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
+import com.sge.platforme_etude.helper.exceptions.UnauthorizedException;
 import com.sge.platforme_etude.helper.security.jwt.JwtUtils;
 import com.sge.platforme_etude.mapper.UserMapper;
 import com.sge.platforme_etude.repository.UserRepo;
@@ -53,7 +57,7 @@ public class UserService {
     @Transactional
     public UserDto createUser(UserDto userDto , AuthRequest authRequest){
         userRepo.findUserByEmail(authRequest.getEmail()).ifPresent(u -> {
-            throw new RuntimeException("Email already exists");
+            throw new ConflictException("Email already exists");
         });
 
         User user = userMapper.toEntity(userDto);
@@ -65,15 +69,15 @@ public class UserService {
     }
 
     @Transactional
-    public void loginProcess(AuthRequest authRequest) throws Exception {
+    public void loginProcess(AuthRequest authRequest) {
         User user = userRepo.findUserByEmail(authRequest.getEmail())
-                .orElseThrow(()-> new RuntimeException("User Not Found!"));
+                .orElseThrow(() -> new NotFoundException("User Not Found!"));
 
         if(!user.getActif()){
-            throw new Exception("Votre compte est désactivé, contactez l'administrateur");
+            throw new ForbiddenException("Votre compte est désactivé, contactez l'administrateur");
         }
         if(!encoder.matches(authRequest.getPassword() ,user.getMotDePasse() ) ){
-            throw new Exception("Email ou Mot de passe incorrect");
+            throw new UnauthorizedException("Email ou Mot de passe incorrect");
         }
 
         String validationCode = generateValidationCode();
@@ -97,27 +101,27 @@ public class UserService {
     }
 
     @Transactional
-    public String[] validateCode(ValidationCodeRequest validationCodeRequest) throws Exception {
+    public String[] validateCode(ValidationCodeRequest validationCodeRequest) {
 
         User user = userRepo.findUserByEmail(validationCodeRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("User Not Found!"));
+                .orElseThrow(() -> new NotFoundException("User Not Found!"));
 
         if (user.getValidationCode() == null)
-            throw new Exception("Aucun code de validation trouvé. Veuillez vous reconnecter.");
+            throw new UnauthorizedException("Aucun code de validation trouvé. Veuillez vous reconnecter.");
 
         if (user.getValidationCodeExpiration() == null)
-            throw new Exception("Code de validation expiré. Veuillez vous reconnecter.");
+            throw new UnauthorizedException("Code de validation expiré. Veuillez vous reconnecter.");
 
         LocalDateTime expiration = user.getValidationCodeExpiration().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         if (now.isAfter(expiration)) {
             long secondesEcoulees = Duration.between(expiration, now).getSeconds();
-            throw new Exception("Le code a expiré il y a " + secondesEcoulees + " secondes.");
+            throw new UnauthorizedException("Le code a expiré il y a " + secondesEcoulees + " secondes.");
         }
 
         if (!user.getValidationCode().trim().equals(validationCodeRequest.getValidationCode().trim()))
-            throw new Exception("Code de validation incorrect");
+            throw new UnauthorizedException("Code de validation incorrect");
 
         user.setValidationCode(null);
         user.setValidationCodeExpiration(null);
@@ -133,7 +137,7 @@ public class UserService {
     public UserDto findUserById(Long id){
         return userRepo.findById(id)
                 .map(userMapper::toDto)
-                .orElseThrow(()-> new RuntimeException("User Not Found!"));
+                .orElseThrow(() -> new NotFoundException("User Not Found!"));
     }
 
     public List<UserDto> findAllUsers(){
@@ -147,13 +151,13 @@ public class UserService {
     public UserDto findUserByEmail(String email){
         return userRepo.findUserByEmail(email)
                 .map(userMapper::toDto)
-                .orElseThrow(()-> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
     }
     @Transactional
     public UserDto updateUserById(UserDto userDto , Long id){
 
         User user = userRepo.findById(id)
-                .orElseThrow(()-> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         userMapper.updateEntity(user,userDto);
         User updated = userRepo.save(user);
 
@@ -164,7 +168,7 @@ public class UserService {
     @Transactional
     public void deleteUserById(Long id){
         User user = userRepo.findById(id)
-                .orElseThrow(()-> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
         userRepo.delete(user);
     }
 }

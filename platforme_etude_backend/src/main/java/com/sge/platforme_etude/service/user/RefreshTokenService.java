@@ -3,6 +3,7 @@ package com.sge.platforme_etude.service.user;
 
 import com.sge.platforme_etude.entite.RefreshToken;
 import com.sge.platforme_etude.entite.User;
+import com.sge.platforme_etude.helper.exceptions.NotFoundException;
 import com.sge.platforme_etude.helper.exceptions.TokenException;
 import com.sge.platforme_etude.repository.RefreshTokenRepo;
 import com.sge.platforme_etude.repository.UserRepo;
@@ -28,7 +29,7 @@ public class RefreshTokenService {
 
     public RefreshToken createRefreshToken(Long userId) {
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User non trouvé"));
+                .orElseThrow(() -> new NotFoundException("User non trouvé"));
 
         RefreshToken token = RefreshToken.builder()
                 .user(user)
