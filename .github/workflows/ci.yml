@@ -37,6 +37,15 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: 'maven'
+
+      - name: Run backend tests
+        working-directory: platforme_etude_backend
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/platforme_etude_db
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: Yassbhr12
+        run: mvn clean test
 
       - name: Build backend with Maven
         working-directory: platforme_etude_backend
@@ -44,7 +53,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/platforme_etude_db
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: Yassbhr12
-        run: mvn clean package
+        run: mvn package -DskipTests
 
   frontend:
     name: Frontend React Vite
@@ -58,6 +67,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'platforme_etude_frontend/package-lock.json'
 
       - name: Install frontend dependencies
         working-directory: platforme_etude_frontend
