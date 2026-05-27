@@ -1,0 +1,132 @@
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 32px;
+}
+
+.signup-page__container {
+  width: 100%;
+  max-width: 520px;
+}
+
+.signup-page__form-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.4s ease;
+}
+
+.signup-page__header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.signup-page__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.signup-page__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-page__logo svg {
+  width: 20px;
+  height: 20px;
+}
+
+.signup-page__header h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.signup-page__header p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signup-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.signup-success {
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.4s ease;
+}
+
+.signup-success__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--success-light);
+  color: var(--success);
+  margin: 0 auto 20px;
+}
+
+.signup-success__icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.signup-success h2 {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  margin-bottom: 8px;
+}
+
+.signup-success p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 480px) {
+  .signup-page {
+    padding: 16px;
+  }
+
+  .signup-page__form-wrapper {
+    padding: 24px;
+  }
+
+  .signup-form__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

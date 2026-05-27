@@ -1,0 +1,43 @@
+.confirm-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.confirm-dialog__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.confirm-dialog__icon.danger {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.confirm-dialog__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.confirm-dialog__message {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}

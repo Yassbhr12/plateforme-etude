@@ -1,40 +1,26 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { logout as logoutService } from '../api/authService';
+import { logout as logoutApi } from '../api/authService';
 
 const AuthContext = createContext(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restore auth state from localStorage
-    const storedUser = localStorage.getItem('user');
-    const accessToken = localStorage.getItem('accessToken');
-
-    if (storedUser && accessToken) {
+    const stored = localStorage.getItem('user');
+    const token = localStorage.getItem('accessToken');
+    if (stored && token) {
       try {
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
+        setUser(JSON.parse(stored));
       } catch {
         localStorage.removeItem('user');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
       }
     }
     setLoading(false);
   }, []);
 
-  const loginSuccess = (authResponse) => {
+  const saveUser = (authResponse) => {
     const userData = {
       id: authResponse.id,
       email: authResponse.login,
@@ -42,40 +28,35 @@ export const AuthProvider = ({ children }) => {
       prenom: authResponse.prenom,
       role: authResponse.role,
     };
-
     localStorage.setItem('accessToken', authResponse.token);
     localStorage.setItem('refreshToken', authResponse.refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
-
     setUser(userData);
-    setIsAuthenticated(true);
   };
 
   const logout = async () => {
     try {
-      await logoutService();
-    } catch (err) {
-      console.error('Logout error:', err);
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      await logoutApi();
+    } catch {
+      // Even if API fails, clear local state
     }
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
+  const isAdmin = user?.role === 'ROLE_ADMIN';
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        loading,
-        loginSuccess,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, saveUser, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}

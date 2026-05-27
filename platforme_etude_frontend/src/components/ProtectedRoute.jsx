@@ -1,30 +1,25 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from './ui/LoadingSpinner';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+export default function ProtectedRoute({ children, requireAdmin = false }) {
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--bg-primary)',
-        }}
-      >
-        <div className="btn__spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
-};
+  if (requireAdmin && user.role !== 'ROLE_ADMIN') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
-export default ProtectedRoute;
+  return children;
+}

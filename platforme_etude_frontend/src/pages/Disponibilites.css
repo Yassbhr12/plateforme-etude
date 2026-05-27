@@ -1,0 +1,50 @@
+.dispo__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.dispo__day-card--empty {
+  opacity: 0.6;
+}
+
+.dispo__day-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.dispo__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dispo__slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--primary-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--primary-100);
+}
+
+.dispo__slot-time {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-700);
+}
+
+.dispo__slot-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.dispo__slot:hover .dispo__slot-actions {
+  opacity: 1;
+}
