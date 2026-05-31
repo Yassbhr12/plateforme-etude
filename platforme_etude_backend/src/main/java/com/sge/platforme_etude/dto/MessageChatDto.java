@@ -2,6 +2,7 @@ package com.sge.platforme_etude.dto;
 
 
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -15,6 +16,7 @@ public class MessageChatDto {
 
     private Long id;
 
+    @NotBlank
     @Size(max = 2000)
     private String contenu;
 

@@ -14,6 +14,7 @@ import com.sge.platforme_etude.repository.UserRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -36,11 +37,16 @@ public class MessageChatService {
         if (dto.getUserId() == null) {
             throw new BadRequestException("userId is required");
         }
+        if (dto.getContenu() == null || dto.getContenu().isBlank()) {
+            throw new BadRequestException("contenu is required");
+        }
         User user = userRepo.findById(dto.getUserId())
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
         GroupeEtude groupeEtude = groupeEtudeRepo.findById(groupeId)
                 .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
 
+        assertGroupMember(groupeEtude, user.getId());
+        dto.setDateEnvoi(LocalDateTime.now());
 
         MessageChat messageChat = mapper.toEntity(dto, user, groupeEtude);
         return mapper.toDto(repo.save(messageChat));
@@ -77,6 +83,13 @@ public class MessageChatService {
                 .stream()
                 .map(mapper::toDto)
                 .toList();
+    }
+
+    public List<MessageChatDto> findAllMessagesChatByGroupeEtudeId(Long groupeEtudeId, Long currentUserId) {
+        GroupeEtude groupeEtude = groupeEtudeRepo.findById(groupeEtudeId)
+                .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
+        assertGroupMember(groupeEtude, currentUserId);
+        return findAllMessagesChatByGroupeEtudeId(groupeEtudeId);
     }
 
     @Transactional
@@ -126,6 +139,17 @@ public class MessageChatService {
             throw new ForbiddenException("Message does not belong to current user");
         }
         repo.delete(messageChat);
+    }
+
+    private void assertGroupMember(GroupeEtude groupeEtude, Long userId) {
+        if (groupeEtude.getAdmin() != null && groupeEtude.getAdmin().getId().equals(userId)) {
+            return;
+        }
+        boolean member = groupeEtude.getUsers() != null && groupeEtude.getUsers().stream()
+                .anyMatch(user -> user.getId().equals(userId));
+        if (!member) {
+            throw new ForbiddenException("Only group members can access this chat");
+        }
     }
 }
 

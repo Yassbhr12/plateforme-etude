@@ -29,7 +29,7 @@ public class MessageChatController {
 
     @GetMapping("/groupes/{groupeId}/messages")
     public ResponseEntity<List<MessageChatDto>> getAllGroupeMessagesChat(@PathVariable Long groupeId){
-        return ResponseEntity.status(HttpStatus.OK).body(service.findAllMessagesChatByGroupeEtudeId(groupeId));
+        return ResponseEntity.status(HttpStatus.OK).body(service.findAllMessagesChatByGroupeEtudeId(groupeId, currentUserService.getCurrentUserId()));
     }
 
 

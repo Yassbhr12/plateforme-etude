@@ -55,8 +55,12 @@ public class MessageChatMapper {
             return;
         }
 
-        messageChat.setContenu(dto.getContenu());
-        messageChat.setDateEnvoi(dto.getDateEnvoi());
+        if (dto.getContenu() != null) {
+            messageChat.setContenu(dto.getContenu());
+        }
+        if (dto.getDateEnvoi() != null) {
+            messageChat.setDateEnvoi(dto.getDateEnvoi());
+        }
         messageChat.setUser(user == null ? messageChat.getUser() : user);
         messageChat.setGroupeEtude(groupeEtude == null ? messageChat.getGroupeEtude() : groupeEtude);
     }

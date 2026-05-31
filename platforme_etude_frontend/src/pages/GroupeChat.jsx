@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getGroupeMessages, sendGroupeMessage } from '../api/messageService';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, AlertCircle } from 'lucide-react';
 import './GroupeChat.css';
 
 export default function GroupeChat() {
@@ -13,6 +13,7 @@ export default function GroupeChat() {
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
 
   useEffect(() => { loadMessages(); }, [id]);
@@ -30,7 +31,10 @@ export default function GroupeChat() {
     try {
       const data = await getGroupeMessages(id);
       setMessages(data);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Impossible de charger les messages');
+    }
     finally { setLoading(false); }
   };
 
@@ -38,11 +42,15 @@ export default function GroupeChat() {
     e.preventDefault();
     if (!newMessage.trim()) return;
     setSending(true);
+    setError('');
     try {
       const msg = await sendGroupeMessage(id, { contenu: newMessage.trim() });
       setMessages([...messages, msg]);
       setNewMessage('');
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Impossible d envoyer le message');
+    }
     finally { setSending(false); }
   };
 
@@ -54,6 +62,8 @@ export default function GroupeChat() {
         <Link to="/groupes" className="btn btn-ghost btn-icon btn-sm"><ArrowLeft /></Link>
         <h2>Chat du groupe</h2>
       </div>
+
+      {error && <div className="alert alert-error"><AlertCircle /><span>{error}</span></div>}
 
       <div className="chat-messages">
         {messages.length === 0 ? (
@@ -85,6 +95,7 @@ export default function GroupeChat() {
           placeholder="Écrire un message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          disabled={sending}
           maxLength={2000}
         />
         <button type="submit" className="btn btn-primary btn-icon" disabled={sending || !newMessage.trim()}>
