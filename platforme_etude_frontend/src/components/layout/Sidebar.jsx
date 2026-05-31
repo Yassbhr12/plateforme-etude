@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { createElement } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
@@ -63,14 +64,14 @@ export default function Sidebar() {
 
       <nav className="sidebar__nav">
         <ul className="sidebar__list">
-          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+          {NAV_ITEMS.map(({ to, icon, label }) => (
             <li key={to}>
               <NavLink
                 to={to}
                 className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
                 title={collapsed ? label : undefined}
               >
-                <Icon className="sidebar__link-icon" />
+                {createElement(icon, { className: 'sidebar__link-icon' })}
                 {!collapsed && <span className="sidebar__link-label">{label}</span>}
               </NavLink>
             </li>
@@ -79,7 +80,7 @@ export default function Sidebar() {
           {isAdmin && (
             <li>
               <NavLink
-                to="/admin"
+                to="/admin/dashboard"
                 className={({ isActive }) => `sidebar__link sidebar__link--admin ${isActive ? 'sidebar__link--active' : ''}`}
                 title={collapsed ? 'Administration' : undefined}
               >

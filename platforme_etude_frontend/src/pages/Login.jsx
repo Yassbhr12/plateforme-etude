@@ -86,7 +86,13 @@ export default function Login() {
     try {
       const data = await validateCode(email, fullCode);
       saveUser(data.response);
-      navigate('/dashboard', { replace: true });
+      // Redirect based on role
+      const userRole = data.response.role;
+      if (userRole === 'ROLE_ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Code de validation invalide');
     } finally {

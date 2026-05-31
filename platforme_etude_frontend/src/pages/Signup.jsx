@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../api/authService';
 import { useAuth } from '../context/AuthContext';
-import { GraduationCap, User, Mail, Lock, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
+import { GraduationCap, User, Mail, Lock, AlertCircle, CheckCircle, ArrowRight, BookOpen, Target, Users } from 'lucide-react';
 import './Signup.css';
 
 export default function Signup() {
@@ -54,17 +54,61 @@ export default function Signup() {
   if (success) {
     return (
       <div className="signup-page">
-        <div className="signup-page__container">
-          <div className="signup-success">
-            <div className="signup-success__icon">
-              <CheckCircle />
+        <div className="signup-page__left">
+          <div className="signup-page__form-wrapper">
+            <div className="signup-success">
+              <div className="signup-success__icon">
+                <CheckCircle />
+              </div>
+              <h2>Compte créé avec succès</h2>
+              <p>Votre compte a été créé. Vous pouvez maintenant vous connecter.</p>
+              <Link to="/login" className="btn btn-primary btn-lg">
+                Se connecter
+                <ArrowRight />
+              </Link>
             </div>
-            <h2>Compte créé avec succès</h2>
-            <p>Votre compte a été créé. Vous pouvez maintenant vous connecter.</p>
-            <Link to="/login" className="btn btn-primary btn-lg">
-              Se connecter
-              <ArrowRight />
-            </Link>
+          </div>
+        </div>
+        <div className="signup-page__right">
+          <div className="signup-page__right-content">
+            <div className="signup-page__brand">
+              <div className="signup-page__logo">
+                <GraduationCap />
+              </div>
+              <h1 className="signup-page__brand-name">Platforme Étude</h1>
+            </div>
+            <h2 className="signup-page__headline">
+              Créez votre espace<br />étudiant sécurisé
+            </h2>
+            <p className="signup-page__desc">
+              Commencez à organiser vos études, progressez avec méthode.
+            </p>
+            <p className="signup-page__desc">
+              Créez votre espace étudiant pour planifier vos sessions, suivre vos objectifs et collaborer avec votre groupe.
+            </p>
+            <div className="signup-page__features">
+              <div className="signup-page__feature">
+                <div className="signup-page__feature-icon"><BookOpen /></div>
+                <div>
+                  <strong>Sessions planifiées</strong>
+                  <span>Organisez et suivez vos heures d'étude</span>
+                </div>
+              </div>
+              <div className="signup-page__feature">
+                <div className="signup-page__feature-icon"><Target /></div>
+                <div>
+                  <strong>Objectifs hebdomadaires</strong>
+                  <span>Fixez et atteignez vos objectifs par matière</span>
+                </div>
+              </div>
+              <div className="signup-page__feature">
+                <div className="signup-page__feature-icon"><Users /></div>
+                <div>
+                  <strong>Groupes d'étude</strong>
+                  <span>Collaborez avec vos camarades</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -73,17 +117,11 @@ export default function Signup() {
 
   return (
     <div className="signup-page">
-      <div className="signup-page__container">
+      <div className="signup-page__left">
         <div className="signup-page__form-wrapper">
-          <div className="signup-page__header">
-            <Link to="/login" className="signup-page__brand">
-              <div className="signup-page__logo">
-                <GraduationCap />
-              </div>
-              <span>Platforme Étude</span>
-            </Link>
+          <div className="signup-page__form-header">
             <h2>Créer un compte</h2>
-            <p>Rejoignez la communauté d'apprenants</p>
+            <p>Remplissez le formulaire pour créer votre espace</p>
           </div>
 
           {error && (
@@ -191,6 +229,51 @@ export default function Signup() {
           <p className="login-page__signup-link">
             Déjà un compte ? <Link to="/login">Se connecter</Link>
           </p>
+        </div>
+      </div>
+
+      <div className="signup-page__right">
+        <div className="signup-page__right-content">
+          <div className="signup-page__brand">
+            <div className="signup-page__logo">
+              <GraduationCap />
+            </div>
+            <h1 className="signup-page__brand-name">Platforme Étude</h1>
+          </div>
+
+          <h2 className="signup-page__headline">
+            Créez votre espace<br />étudiant sécurisé
+          </h2>
+          <p className="signup-page__desc">
+            Commencez à organiser vos études, progressez avec méthode.
+          </p>
+          <p className="signup-page__desc">
+            Créez votre espace étudiant pour planifier vos sessions, suivre vos objectifs et collaborer avec votre groupe.
+          </p>
+
+          <div className="signup-page__features">
+            <div className="signup-page__feature">
+              <div className="signup-page__feature-icon"><BookOpen /></div>
+              <div>
+                <strong>Sessions planifiées</strong>
+                <span>Organisez et suivez vos heures d'étude</span>
+              </div>
+            </div>
+            <div className="signup-page__feature">
+              <div className="signup-page__feature-icon"><Target /></div>
+              <div>
+                <strong>Objectifs hebdomadaires</strong>
+                <span>Fixez et atteignez vos objectifs par matière</span>
+              </div>
+            </div>
+            <div className="signup-page__feature">
+              <div className="signup-page__feature-icon"><Users /></div>
+              <div>
+                <strong>Groupes d'étude</strong>
+                <span>Collaborez avec vos camarades</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
