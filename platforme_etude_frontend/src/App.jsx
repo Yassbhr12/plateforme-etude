@@ -7,6 +7,7 @@ import AdminLayout from './components/layout/AdminLayout';
 
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Matieres from './pages/Matieres';
 import Sessions from './pages/Sessions';
@@ -35,6 +36,7 @@ export default function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Protected routes with AppLayout (students) */}

@@ -45,6 +45,30 @@ export const validateCode = async (email, validationCode) => {
 };
 
 /**
+ * Forgot password - Step 1: request a reset code by email.
+ * POST /api/auth/password/forgot
+ * Body: { email }
+ */
+export const requestPasswordReset = async (email) => {
+  const response = await api.post('/auth/password/forgot', { email });
+  return response.data;
+};
+
+/**
+ * Forgot password - Step 2: validate code and set a new password.
+ * POST /api/auth/password/reset
+ * Body: { email, code, newPassword }
+ */
+export const resetPassword = async (email, code, newPassword) => {
+  const response = await api.post('/auth/password/reset', {
+    email,
+    code,
+    newPassword,
+  });
+  return response.data;
+};
+
+/**
  * Refresh access token.
  * POST /api/auth/refresh
  * Body: { refreshToken }

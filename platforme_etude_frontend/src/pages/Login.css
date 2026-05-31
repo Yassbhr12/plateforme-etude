@@ -210,6 +210,22 @@
   padding-left: 42px;
 }
 
+.login-form__forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -2px 0 16px;
+}
+
+.login-form__forgot-row a {
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.login-form__forgot-row a:hover {
+  text-decoration: underline;
+}
+
 /* ── 2FA Code ── */
 .login-form__code-group {
   margin-bottom: 20px;

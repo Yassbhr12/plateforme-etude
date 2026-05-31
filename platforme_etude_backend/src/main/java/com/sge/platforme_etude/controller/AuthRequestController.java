@@ -64,6 +64,22 @@ public class AuthRequestController {
         ));
     }
 
+    @PostMapping("/password/forgot")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        service.requestPasswordReset(request);
+        return ResponseEntity.ok(Map.of(
+                "message", "Si cette adresse existe, un code de reinitialisation a ete envoye."
+        ));
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        service.resetForgottenPassword(request);
+        return ResponseEntity.ok(Map.of(
+                "message", "Mot de passe mis a jour avec succes."
+        ));
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         RefreshToken oldToken = refreshTokenService.verifyAndGet(request.getRefreshToken());

@@ -10,6 +10,7 @@ import com.sge.platforme_etude.helper.exceptions.ConflictException;
 import com.sge.platforme_etude.helper.exceptions.ForbiddenException;
 import com.sge.platforme_etude.helper.security.jwt.JwtUtils;
 import com.sge.platforme_etude.mapper.UserMapper;
+import com.sge.platforme_etude.repository.PasswordResetTokenRepo;
 import com.sge.platforme_etude.repository.UserRepo;
 import com.sge.platforme_etude.service.EmailService;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,9 @@ class UserServiceTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
+    @Mock
+    private PasswordResetTokenRepo passwordResetTokenRepo;
+
     @InjectMocks
     private UserService service;
 
@@ -54,7 +58,7 @@ class UserServiceTest {
         AuthRequest authRequest = new AuthRequest();
         authRequest.setEmail("test@example.com");
 
-        when(userRepo.findUserByEmail("test@example.com")).thenReturn(Optional.of(new User()));
+        when(userRepo.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(new User()));
 
         assertThrows(ConflictException.class, () -> service.createUser(new UserDto(), authRequest));
     }
@@ -69,7 +73,7 @@ class UserServiceTest {
         user.setEmail("test@example.com");
         user.setActif(false);
 
-        when(userRepo.findUserByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmailIgnoreCase("test@example.com")).thenReturn(Optional.of(user));
 
         assertThrows(ForbiddenException.class, () -> service.loginProcess(authRequest));
     }
@@ -85,7 +89,7 @@ class UserServiceTest {
         user.setActif(true);
         user.setMotDePasse(new BCryptPasswordEncoder().encode("secret"));
 
-        when(userRepo.findUserByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
         when(userRepo.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.loginProcess(authRequest);
@@ -112,7 +116,7 @@ class UserServiceTest {
         user.setValidationCode("123456");
         user.setValidationCodeExpiration(LocalDateTime.now().plusMinutes(5).truncatedTo(ChronoUnit.SECONDS));
 
-        when(userRepo.findUserByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
         when(jwtUtils.generateToken("user@example.com", Role.ROLE_USER.name())).thenReturn("access-token");
         RefreshToken refreshToken = RefreshToken.builder().token("refresh-token").build();
         when(refreshTokenService.createRefreshToken(1L)).thenReturn(refreshToken);

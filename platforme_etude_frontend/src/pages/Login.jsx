@@ -107,7 +107,7 @@ export default function Login() {
       await login(email, password);
       setTimer(60);
       setCode(['', '', '', '', '', '']);
-    } catch (err) {
+    } catch {
       setError('Erreur lors du renvoi du code');
     } finally {
       setLoading(false);
@@ -208,6 +208,10 @@ export default function Login() {
                       autoComplete="current-password"
                     />
                   </div>
+                </div>
+
+                <div className="login-form__forgot-row">
+                  <Link to="/forgot-password">Mot de passe oublie ?</Link>
                 </div>
 
                 <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
