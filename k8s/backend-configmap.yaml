@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: platforme-etude
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/platforme_etude_db
+  SPRING_DATASOURCE_USERNAME: postgres
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
