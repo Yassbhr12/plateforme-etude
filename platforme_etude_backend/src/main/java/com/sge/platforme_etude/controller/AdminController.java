@@ -11,6 +11,7 @@ import com.sge.platforme_etude.dto.NotificationDto;
 import com.sge.platforme_etude.dto.ObjectifHebdoDto;
 import com.sge.platforme_etude.dto.SessionEtudeDto;
 import com.sge.platforme_etude.dto.UserDto;
+import com.sge.platforme_etude.helper.enums.Role;
 import com.sge.platforme_etude.service.CommentaireService;
 import com.sge.platforme_etude.service.DisponibiliteService;
 import com.sge.platforme_etude.service.GroupeEtudeService;
@@ -22,7 +23,9 @@ import com.sge.platforme_etude.service.ObjectifHebdoService;
 import com.sge.platforme_etude.service.SessionEtudeService;
 import com.sge.platforme_etude.service.user.CurrentUserService;
 import com.sge.platforme_etude.service.user.UserService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,8 +64,20 @@ public class AdminController {
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id){
-        userService.deleteUserById(id);
+        userService.deleteUserById(id, currentUserService.getCurrentUserId());
         return ResponseEntity.status(HttpStatus.OK).body("L'utilisateur avec l'id " + id + " a ete supprime avec succes");
+    }
+
+    @PutMapping("/users/{id}/toggle-status")
+    public ResponseEntity<UserDto> toggleUserStatus(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.toggleUserStatus(id, currentUserService.getCurrentUserId()));
+    }
+
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestBody UpdateUserRoleRequest request) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.updateUserRole(id, request.getRole(), currentUserService.getCurrentUserId()));
     }
 
     //Matieres
@@ -235,6 +250,12 @@ public class AdminController {
     public ResponseEntity<String> deleteSessionById(@PathVariable Long id) {
         sessionEtudeService.deleteSessionEtudeById(id);
         return ResponseEntity.status(HttpStatus.OK).body("Session is deleted successfully");
+    }
+
+    @Getter
+    @Setter
+    public static class UpdateUserRoleRequest {
+        private Role role;
     }
 
 }

@@ -4,6 +4,8 @@ import api from './axios';
 export const getUsers = async () => (await api.get('/admin/users')).data;
 export const getUser = async (id) => (await api.get(`/admin/users/${id}`)).data;
 export const deleteUser = async (id) => (await api.delete(`/admin/users/${id}`)).data;
+export const toggleUserStatus = async (id) => (await api.put(`/admin/users/${id}/toggle-status`)).data;
+export const updateUserRole = async (id, role) => (await api.put(`/admin/users/${id}/role`, { role })).data;
 
 // Matieres
 export const getAllMatieres = async () => (await api.get('/admin/matieres')).data;
