@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { getSessions, createSession, updateSession, cancelSession, markSessionDone, deleteSession } from '../api/sessionService';
+import { getSessions, createSession, updateSession, cancelSession, markSessionDone, deleteSession, regenerateWeeklyPlan } from '../api/sessionService';
 import { getMatieres } from '../api/matiereService';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import StatusBadge from '../components/ui/StatusBadge';
-import { CalendarClock, Plus, Edit3, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CalendarClock, Plus, Edit3, Trash2, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import './Sessions.css';
+
+const todayIso = () => new Date().toISOString().split('T')[0];
 
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
@@ -17,8 +19,12 @@ export default function Sessions() {
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [pageError, setPageError] = useState('');
+  const [pageMessage, setPageMessage] = useState('');
   const [filter, setFilter] = useState('all');
+  const [generationDate, setGenerationDate] = useState(todayIso());
   const [form, setForm] = useState({ titre: '', dateDebut: '', dateFin: '', dureeMax: 60, matiereId: '' });
 
   useEffect(() => { loadData(); }, []);
@@ -96,6 +102,22 @@ export default function Sessions() {
     finally { setSaving(false); }
   };
 
+  const handleRegenerate = async () => {
+    setGenerating(true);
+    setPageError('');
+    setPageMessage('');
+    try {
+      await regenerateWeeklyPlan(generationDate || undefined);
+      await loadData();
+      setFilter('PLANIFIEE');
+      setPageMessage('Planning hebdomadaire genere avec succes.');
+    } catch (err) {
+      setPageError(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la generation du planning');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const filtered = filter === 'all' ? sessions : sessions.filter((s) => s.statut === filter);
 
   if (loading) return <div className="page"><LoadingSpinner size="lg" text="Chargement des sessions..." /></div>;
@@ -108,9 +130,24 @@ export default function Sessions() {
             <h1>Sessions d'étude</h1>
             <p>Planifiez et suivez vos sessions d'étude</p>
           </div>
-          <button className="btn btn-primary" onClick={openCreate}><Plus /> Nouvelle session</button>
+          <div className="sessions__header-actions">
+            <input
+              type="date"
+              className="form-input sessions__week-input"
+              value={generationDate}
+              onChange={(e) => setGenerationDate(e.target.value)}
+              aria-label="Date de la semaine a generer"
+            />
+            <button className="btn btn-secondary" onClick={handleRegenerate} disabled={generating}>
+              <RefreshCw /> {generating ? 'Generation...' : 'Generer la semaine'}
+            </button>
+            <button className="btn btn-primary" onClick={openCreate}><Plus /> Nouvelle session</button>
+          </div>
         </div>
       </div>
+
+      {pageError && <div className="alert alert-error"><AlertCircle /><span>{pageError}</span></div>}
+      {pageMessage && <div className="alert alert-success"><CheckCircle /><span>{pageMessage}</span></div>}
 
       <div className="tabs">
         {[

@@ -22,6 +22,11 @@ public class GroupeEtudeController {
         this.currentUserService = currentUserService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<GroupeEtudeDto>> getMyGroupes() {
+        return ResponseEntity.status(HttpStatus.OK).body(service.findAllGroupesEtudeByMemberOrAdminId(currentUserService.getCurrentUserId()));
+    }
+
     @GetMapping("/admin")
     public ResponseEntity<List<GroupeEtudeDto>> getMyAdminGroupes() {
         return ResponseEntity.status(HttpStatus.OK).body(service.findAllGroupesEtudeByAdminId(currentUserService.getCurrentUserId()));

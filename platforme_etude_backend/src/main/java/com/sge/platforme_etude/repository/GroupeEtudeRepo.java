@@ -14,5 +14,7 @@ public interface GroupeEtudeRepo extends JpaRepository<GroupeEtude , Long> {
 
     List<GroupeEtude> findGroupeEtudeByAdmin(User admin);
 
+    List<GroupeEtude> findDistinctByAdminIdOrUsersId(Long adminId, Long userId);
+
 }
 

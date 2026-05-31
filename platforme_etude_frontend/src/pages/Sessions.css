@@ -1,1 +1,25 @@
 /* Sessions page uses global table, tabs, and badge styles */
+
+.sessions__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sessions__week-input {
+  width: 170px;
+}
+
+@media (max-width: 640px) {
+  .sessions__header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .sessions__header-actions .btn,
+  .sessions__week-input {
+    width: 100%;
+  }
+}

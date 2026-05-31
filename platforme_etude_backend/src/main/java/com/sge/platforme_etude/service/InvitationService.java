@@ -45,15 +45,21 @@ public class InvitationService {
         if (dto.getSenderId() == null) {
             throw new BadRequestException("Sender id is required");
         }
+        if (dto.getGroupeEtudeId() == null) {
+            throw new BadRequestException("Groupe id is required");
+        }
         GroupeEtude groupeEtude = groupeEtudeRepo.findById(dto.getGroupeEtudeId())
                 .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
         User sender = userRepo.findById(dto.getSenderId())
                 .orElseThrow(() -> new NotFoundException("Sender Not Found"));
-        User receiver = userRepo.findById(dto.getReceiverId())
-                .orElseThrow(() -> new NotFoundException("Receiver Not Found"));
+        User receiver = resolveReceiver(dto);
 
         if (sender.getId().equals(receiver.getId())) {
             throw new BadRequestException("Cannot invite yourself");
+        }
+
+        if (groupeEtude.getAdmin() == null || !groupeEtude.getAdmin().getId().equals(sender.getId())) {
+            throw new ForbiddenException("Only group admin can invite members");
         }
 
         boolean alreadyMember = groupeEtude.getUsers() != null && groupeEtude.getUsers().stream()
@@ -62,18 +68,18 @@ public class InvitationService {
             throw new ConflictException("Receiver is already a group member");
         }
 
-        boolean pendingExists = repo.findInvitationByReceiver(receiver).stream()
-                .anyMatch(i -> i.getGroupeEtude() != null
-                        && i.getGroupeEtude().getId().equals(groupeEtude.getId())
-                        && i.getSender() != null
-                        && i.getSender().getId().equals(sender.getId())
-                        && i.getStatut() == StatutInvitation.EN_ATTENTE);
+        boolean pendingExists = repo.existsByGroupeEtudeIdAndReceiverIdAndStatut(
+                groupeEtude.getId(),
+                receiver.getId(),
+                StatutInvitation.EN_ATTENTE
+        );
         if (pendingExists) {
             throw new ConflictException("Pending invitation already exists");
         }
 
-        dto.setStatut(dto.getStatut() == null ? StatutInvitation.EN_ATTENTE : dto.getStatut());
         Invitation invitation = mapper.toEntity(dto, groupeEtude, sender, receiver);
+        invitation.setStatut(StatutInvitation.EN_ATTENTE);
+        invitation.setDateEnvoi(LocalDateTime.now());
         Invitation saved = repo.save(invitation);
 
         Notification notification = new Notification();
@@ -182,8 +188,18 @@ public class InvitationService {
         if (!alreadyMember) {
             groupeEtude.getUsers().add(invitation.getReceiver());
         }
+        User receiver = invitation.getReceiver();
+        if (receiver.getGroupeEtudes() == null) {
+            receiver.setGroupeEtudes(new ArrayList<>());
+        }
+        boolean groupAlreadyLinked = receiver.getGroupeEtudes().stream()
+                .anyMatch(g -> g.getId().equals(groupeEtude.getId()));
+        if (!groupAlreadyLinked) {
+            receiver.getGroupeEtudes().add(groupeEtude);
+        }
 
         invitation.setStatut(StatutInvitation.ACCEPTEE);
+        userRepo.save(receiver);
         groupeEtudeRepo.save(groupeEtude);
         return mapper.toDto(repo.save(invitation));
     }
@@ -223,6 +239,18 @@ public class InvitationService {
         invitation.setStatut(StatutInvitation.ANNULEE);
 
         return mapper.toDto(repo.save(invitation));
+    }
+
+    private User resolveReceiver(InvitationDto dto) {
+        if (dto.getReceiverId() != null) {
+            return userRepo.findById(dto.getReceiverId())
+                    .orElseThrow(() -> new NotFoundException("Receiver Not Found"));
+        }
+        if (dto.getReceiverEmail() != null && !dto.getReceiverEmail().isBlank()) {
+            return userRepo.findByEmailIgnoreCase(dto.getReceiverEmail().trim())
+                    .orElseThrow(() -> new NotFoundException("Receiver Not Found"));
+        }
+        throw new BadRequestException("Receiver id or email is required");
     }
 
 }

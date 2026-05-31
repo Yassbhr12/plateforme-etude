@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.*;
 import java.util.stream.*;
 
@@ -69,6 +67,8 @@ public class GroupeEtudeService {
         GroupeEtude groupeEtude = mapper.toEntity(dto, admin, membres);
 
         GroupeEtude saved = repo.save(groupeEtude);
+        addMember(admin, saved);
+        userRepo.save(admin);
 
         if(!users.isEmpty()){
             List<Notification> notificationList = new ArrayList<>();
@@ -126,9 +126,17 @@ public class GroupeEtudeService {
         User admin = userRepo.findById(adminId)
                 .orElseThrow(() -> new NotFoundException("Admin Not Found"));
 
-        List<GroupeEtude> groupeEtudes = repo.findGroupeEtudeByAdmin(admin);
-
         return repo.findGroupeEtudeByAdmin(admin)
+                .stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    public List<GroupeEtudeDto> findAllGroupesEtudeByMemberOrAdminId(Long userId) {
+        userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
+
+        return repo.findDistinctByAdminIdOrUsersId(userId, userId)
                 .stream()
                 .map(mapper::toDto)
                 .toList();
@@ -239,6 +247,7 @@ public class GroupeEtudeService {
     public void deleteGroupeEtudeById(Long id) {
         GroupeEtude groupeEtude = repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("GroupeEtude Not Found"));
+        detachMembers(groupeEtude);
         repo.delete(groupeEtude);
     }
 
@@ -249,6 +258,35 @@ public class GroupeEtudeService {
         if (groupeEtude.getAdmin() == null || !groupeEtude.getAdmin().getId().equals(currentUserId)) {
             throw new ForbiddenException("Only group admin can delete this group");
         }
+        detachMembers(groupeEtude);
         repo.delete(groupeEtude);
+    }
+
+    private void addMember(User user, GroupeEtude groupeEtude) {
+        if (groupeEtude.getUsers() == null) {
+            groupeEtude.setUsers(new ArrayList<>());
+        }
+        if (groupeEtude.getUsers().stream().noneMatch(member -> member.getId().equals(user.getId()))) {
+            groupeEtude.getUsers().add(user);
+        }
+        if (user.getGroupeEtudes() == null) {
+            user.setGroupeEtudes(new ArrayList<>());
+        }
+        if (user.getGroupeEtudes().stream().noneMatch(group -> group.getId().equals(groupeEtude.getId()))) {
+            user.getGroupeEtudes().add(groupeEtude);
+        }
+    }
+
+    private void detachMembers(GroupeEtude groupeEtude) {
+        if (groupeEtude.getUsers() == null) {
+            return;
+        }
+        for (User user : new ArrayList<>(groupeEtude.getUsers())) {
+            if (user.getGroupeEtudes() != null) {
+                user.getGroupeEtudes().removeIf(group -> group.getId().equals(groupeEtude.getId()));
+                userRepo.save(user);
+            }
+        }
+        groupeEtude.getUsers().clear();
     }
 }

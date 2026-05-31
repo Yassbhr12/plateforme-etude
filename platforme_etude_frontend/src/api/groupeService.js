@@ -5,6 +5,11 @@ export const getMyAdminGroupes = async () => {
   return res.data;
 };
 
+export const getMyGroupes = async () => {
+  const res = await api.get('/me/groupes');
+  return res.data;
+};
+
 export const createGroupe = async (data) => {
   const res = await api.post('/me/groupes', data);
   return res.data;

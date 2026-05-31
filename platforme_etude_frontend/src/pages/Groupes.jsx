@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyAdminGroupes, createGroupe, updateGroupe, deleteGroupe } from '../api/groupeService';
+import { useAuth } from '../context/AuthContext';
+import { getMyAdminGroupes, getMyGroupes, createGroupe, updateGroupe, deleteGroupe } from '../api/groupeService';
 import { getReceivedInvitations, acceptInvitation, refuseInvitation, createInvitation } from '../api/invitationService';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -12,7 +13,9 @@ import './Groupes.css';
 
 export default function Groupes() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [groupes, setGroupes] = useState([]);
+  const [adminGroupes, setAdminGroupes] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,6 +24,7 @@ export default function Groupes() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [pageMessage, setPageMessage] = useState('');
   const [form, setForm] = useState({ nom: '', description: '' });
   const [inviteForm, setInviteForm] = useState({ receiverEmail: '', groupeEtudeId: '' });
   const [tab, setTab] = useState('groupes');
@@ -29,12 +33,15 @@ export default function Groupes() {
 
   const loadData = async () => {
     try {
-      const [g, inv] = await Promise.allSettled([getMyAdminGroupes(), getReceivedInvitations()]);
-      setGroupes(g.status === 'fulfilled' ? g.value : []);
+      const [all, admin, inv] = await Promise.allSettled([getMyGroupes(), getMyAdminGroupes(), getReceivedInvitations()]);
+      setGroupes(all.status === 'fulfilled' ? all.value : []);
+      setAdminGroupes(admin.status === 'fulfilled' ? admin.value : []);
       setInvitations(inv.status === 'fulfilled' ? inv.value : []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
+
+  const canManage = (groupe) => Number(groupe.adminId) === Number(user?.id);
 
   const openCreate = () => {
     setEditing(null);
@@ -58,9 +65,11 @@ export default function Groupes() {
       if (editing) {
         const updated = await updateGroupe(editing.id, form);
         setGroupes(groupes.map((g) => g.id === updated.id ? updated : g));
+        setAdminGroupes(adminGroupes.map((g) => g.id === updated.id ? updated : g));
       } else {
         const created = await createGroupe(form);
         setGroupes([...groupes, created]);
+        setAdminGroupes([...adminGroupes, created]);
       }
       setModalOpen(false);
     } catch (err) {
@@ -74,6 +83,7 @@ export default function Groupes() {
     try {
       await deleteGroupe(deleteTarget.id);
       setGroupes(groupes.filter((g) => g.id !== deleteTarget.id));
+      setAdminGroupes(adminGroupes.filter((g) => g.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err) { console.error(err); }
     finally { setSaving(false); }
@@ -83,10 +93,12 @@ export default function Groupes() {
     e.preventDefault();
     setSaving(true);
     setError('');
+    setPageMessage('');
     try {
       await createInvitation({ receiverEmail: inviteForm.receiverEmail, groupeEtudeId: Number(inviteForm.groupeEtudeId) });
       setInviteModal(false);
       setInviteForm({ receiverEmail: '', groupeEtudeId: '' });
+      setPageMessage('Invitation envoyee avec succes.');
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erreur');
     } finally { setSaving(false); }
@@ -96,6 +108,7 @@ export default function Groupes() {
     try {
       await acceptInvitation(id);
       setInvitations(invitations.map((inv) => inv.id === id ? { ...inv, statut: 'ACCEPTEE' } : inv));
+      setPageMessage('Invitation acceptee. Le groupe est maintenant disponible dans Mes groupes.');
       loadData();
     } catch (err) { console.error(err); }
   };
@@ -120,13 +133,20 @@ export default function Groupes() {
             <p>Collaborez avec d'autres étudiants</p>
           </div>
           <div className="flex gap-2">
-            <button className="btn btn-secondary" onClick={() => { setInviteForm({ receiverEmail: '', groupeEtudeId: groupes[0]?.id || '' }); setError(''); setInviteModal(true); }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => { setInviteForm({ receiverEmail: '', groupeEtudeId: adminGroupes[0]?.id || '' }); setError(''); setInviteModal(true); }}
+              disabled={adminGroupes.length === 0}
+              title={adminGroupes.length === 0 ? 'Creez un groupe avant d\'inviter un membre' : 'Inviter un membre'}
+            >
               <UserPlus /> Inviter
             </button>
             <button className="btn btn-primary" onClick={openCreate}><Plus /> Nouveau groupe</button>
           </div>
         </div>
       </div>
+
+      {pageMessage && <div className="alert alert-success"><Check /><span>{pageMessage}</span></div>}
 
       <div className="tabs">
         <button className={`tab ${tab === 'groupes' ? 'active' : ''}`} onClick={() => setTab('groupes')}>Mes groupes</button>
@@ -147,11 +167,21 @@ export default function Groupes() {
                     <div className="groupes__card-icon"><Users /></div>
                     <div className="flex gap-2">
                       <button className="btn btn-ghost btn-icon btn-sm" onClick={() => navigate(`/groupes/${g.id}/chat`)} title="Chat"><MessageCircle /></button>
-                      <button className="btn btn-ghost btn-icon btn-sm" onClick={() => openEdit(g)}><Edit3 /></button>
-                      <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setDeleteTarget(g)}><Trash2 /></button>
+                      {canManage(g) && (
+                        <>
+                          <button className="btn btn-ghost btn-icon btn-sm" onClick={() => openEdit(g)} title="Modifier"><Edit3 /></button>
+                          <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setDeleteTarget(g)} title="Supprimer"><Trash2 /></button>
+                        </>
+                      )}
                     </div>
                   </div>
                   <h3 style={{ marginBottom: 6 }}>{g.nom}</h3>
+                  <div className="groupes__meta">
+                    <span className={`badge ${canManage(g) ? 'badge-primary' : 'badge-neutral'}`}>
+                      {canManage(g) ? 'Admin' : 'Membre'}
+                    </span>
+                    {!canManage(g) && g.adminNom && <span className="text-sm text-secondary">Admin: {g.adminNom}</span>}
+                  </div>
                   {g.description && <p className="text-sm text-secondary" style={{ marginBottom: 12 }}>{g.description}</p>}
                   <div className="groupes__members">
                     <Users style={{ width: 14, height: 14 }} />
@@ -227,7 +257,7 @@ export default function Groupes() {
             <label className="form-label">Groupe</label>
             <select className="form-select" value={inviteForm.groupeEtudeId} onChange={(e) => setInviteForm({ ...inviteForm, groupeEtudeId: e.target.value })} required>
               <option value="">Sélectionner un groupe</option>
-              {groupes.map((g) => <option key={g.id} value={g.id}>{g.nom}</option>)}
+              {adminGroupes.map((g) => <option key={g.id} value={g.id}>{g.nom}</option>)}
             </select>
           </div>
           <div className="form-group">
