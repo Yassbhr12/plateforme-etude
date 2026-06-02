@@ -64,25 +64,23 @@ class UserMapperTest {
     }
 
     @Test
-    void updateEntity_updatesFields_andDefaultsActif() {
+    void updateEntity_updatesProvidedFields_andPreservesMissingFields() {
         User user = new User();
         user.setEmail("old@example.com");
         user.setActif(false);
+        user.setRole(Role.ROLE_ADMIN);
 
         UserDto dto = new UserDto();
         dto.setNom("NewNom");
         dto.setPrenom("NewPrenom");
-        dto.setEmail("new@example.com");
-        dto.setRole(Role.ROLE_USER);
-        dto.setActif(null);
 
         mapper.updateEntity(user, dto);
 
         assertEquals("NewNom", user.getNom());
         assertEquals("NewPrenom", user.getPrenom());
-        assertEquals("new@example.com", user.getEmail());
-        assertEquals(Role.ROLE_USER, user.getRole());
-        assertTrue(user.getActif());
+        assertEquals("old@example.com", user.getEmail());
+        assertEquals(Role.ROLE_ADMIN, user.getRole());
+        assertFalse(user.getActif());
     }
 
     @Test

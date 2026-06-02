@@ -62,11 +62,21 @@ public class UserMapper {
             return;
         }
 
-        user.setNom(userDto.getNom());
-        user.setPrenom(userDto.getPrenom());
-        user.setEmail(userDto.getEmail());
-        user.setRole(userDto.getRole());
-        user.setActif(userDto.getActif() == null ? true : userDto.getActif());
+        if (userDto.getNom() != null) {
+            user.setNom(userDto.getNom());
+        }
+        if (userDto.getPrenom() != null) {
+            user.setPrenom(userDto.getPrenom());
+        }
+        if (userDto.getEmail() != null) {
+            user.setEmail(userDto.getEmail());
+        }
+        if (userDto.getRole() != null) {
+            user.setRole(userDto.getRole());
+        }
+        if (userDto.getActif() != null) {
+            user.setActif(userDto.getActif());
+        }
 
 
     }
