@@ -35,9 +35,7 @@ export default function Notifications() {
 
   const handleMarkAllRead = async () => {
     const unread = notifs.filter((n) => !n.lue);
-    for (const n of unread) {
-      try { await markAsRead(n.id); } catch {}
-    }
+    await Promise.allSettled(unread.map((n) => markAsRead(n.id)));
     setNotifs(notifs.map((n) => ({ ...n, lue: true })));
   };
 

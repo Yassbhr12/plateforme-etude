@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, updateProfile } from '../api/adminService';
+import { getProfile, updateProfile } from '../api/profilService';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { User, Mail, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import './Profil.css';
 
 export default function Profil() {
-  const { user } = useAuth();
+  const { user, updateStoredUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,12 +31,11 @@ export default function Profil() {
     setError('');
     setSuccess('');
     try {
-      const updated = await updateProfile(form);
+      const updated = await updateProfile({ nom: form.nom, prenom: form.prenom });
       setProfile(updated);
       setSuccess('Profil mis à jour avec succès');
-      // Update local storage
-      const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      localStorage.setItem('user', JSON.stringify({ ...stored, nom: form.nom, prenom: form.prenom, email: form.email }));
+      // Update React state + localStorage via AuthContext
+      updateStoredUser({ nom: form.nom, prenom: form.prenom });
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la mise à jour');
     } finally { setSaving(false); }
@@ -95,8 +94,9 @@ export default function Profil() {
                 <label className="form-label">Email</label>
                 <div className="login-form__input-wrapper">
                   <Mail className="login-form__input-icon" />
-                  <input type="email" className="form-input login-form__input-with-icon" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+                  <input type="email" className="form-input login-form__input-with-icon" value={form.email} disabled readOnly />
                 </div>
+                <p className="form-hint">L'adresse email est utilisée pour la connexion et la validation 2FA.</p>
               </div>
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? 'Enregistrement...' : 'Mettre à jour'}

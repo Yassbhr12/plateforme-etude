@@ -18,6 +18,7 @@ import Disponibilites from './pages/Disponibilites';
 import Notifications from './pages/Notifications';
 import Profil from './pages/Profil';
 import Unauthorized from './pages/Unauthorized';
+import NotFound from './pages/NotFound';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -66,7 +67,7 @@ export default function App() {
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

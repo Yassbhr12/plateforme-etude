@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { createElement } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -30,10 +30,12 @@ const NAV_ITEMS = [
   { to: '/profil', icon: User, label: 'Profil' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen = false, onNavigate = () => {} }) {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const isOnAdminPage = location.pathname.startsWith('/admin');
 
   const handleLogout = async () => {
     await logout();
@@ -41,7 +43,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} ${mobileOpen ? 'sidebar--mobile-open' : ''}`}>
       <div className="sidebar__brand">
         <div className="sidebar__logo">
           <GraduationCap />
@@ -68,6 +70,7 @@ export default function Sidebar() {
             <li key={to}>
               <NavLink
                 to={to}
+                onClick={onNavigate}
                 className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
                 title={collapsed ? label : undefined}
               >
@@ -81,7 +84,8 @@ export default function Sidebar() {
             <li>
               <NavLink
                 to="/admin/dashboard"
-                className={({ isActive }) => `sidebar__link sidebar__link--admin ${isActive ? 'sidebar__link--active' : ''}`}
+                onClick={onNavigate}
+                className={`sidebar__link sidebar__link--admin ${isOnAdminPage ? 'sidebar__link--active' : ''}`}
                 title={collapsed ? 'Administration' : undefined}
               >
                 <ShieldCheck className="sidebar__link-icon" />

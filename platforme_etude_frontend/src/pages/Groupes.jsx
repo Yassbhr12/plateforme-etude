@@ -27,6 +27,7 @@ export default function Groupes() {
   const [pageMessage, setPageMessage] = useState('');
   const [form, setForm] = useState({ nom: '', description: '' });
   const [inviteForm, setInviteForm] = useState({ receiverEmail: '', groupeEtudeId: '' });
+  const [inviteError, setInviteError] = useState('');
   const [tab, setTab] = useState('groupes');
 
   useEffect(() => { loadData(); }, []);
@@ -92,15 +93,15 @@ export default function Groupes() {
   const handleInvite = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setInviteError('');
     setPageMessage('');
     try {
       await createInvitation({ receiverEmail: inviteForm.receiverEmail, groupeEtudeId: Number(inviteForm.groupeEtudeId) });
       setInviteModal(false);
       setInviteForm({ receiverEmail: '', groupeEtudeId: '' });
-      setPageMessage('Invitation envoyee avec succes.');
+      setPageMessage('Invitation envoyée avec succès.');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Erreur');
+      setInviteError(err.response?.data?.message || err.response?.data?.error || 'Erreur');
     } finally { setSaving(false); }
   };
 
@@ -108,7 +109,7 @@ export default function Groupes() {
     try {
       await acceptInvitation(id);
       setInvitations(invitations.map((inv) => inv.id === id ? { ...inv, statut: 'ACCEPTEE' } : inv));
-      setPageMessage('Invitation acceptee. Le groupe est maintenant disponible dans Mes groupes.');
+      setPageMessage('Invitation acceptée. Le groupe est maintenant disponible dans Mes groupes.');
       loadData();
     } catch (err) { console.error(err); }
   };
@@ -137,7 +138,7 @@ export default function Groupes() {
               className="btn btn-secondary"
               onClick={() => { setInviteForm({ receiverEmail: '', groupeEtudeId: adminGroupes[0]?.id || '' }); setError(''); setInviteModal(true); }}
               disabled={adminGroupes.length === 0}
-              title={adminGroupes.length === 0 ? 'Creez un groupe avant d\'inviter un membre' : 'Inviter un membre'}
+              title={adminGroupes.length === 0 ? 'Créez un groupe avant d\'inviter un membre' : 'Inviter un membre'}
             >
               <UserPlus /> Inviter
             </button>
@@ -251,7 +252,7 @@ export default function Groupes() {
       </Modal>
 
       <Modal isOpen={inviteModal} onClose={() => setInviteModal(false)} title="Inviter un membre" size="sm">
-        {error && <div className="alert alert-error"><AlertCircle /><span>{error}</span></div>}
+        {inviteError && <div className="alert alert-error"><AlertCircle /><span>{inviteError}</span></div>}
         <form onSubmit={handleInvite}>
           <div className="form-group">
             <label className="form-label">Groupe</label>

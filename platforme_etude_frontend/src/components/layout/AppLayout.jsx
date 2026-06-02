@@ -9,7 +9,7 @@ export default function AppLayout() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      <Sidebar mobileOpen={mobileMenuOpen} onNavigate={() => setMobileMenuOpen(false)} />
       {mobileMenuOpen && (
         <div className="app-layout__backdrop" onClick={() => setMobileMenuOpen(false)} />
       )}

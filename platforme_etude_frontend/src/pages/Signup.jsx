@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { GraduationCap, User, Mail, Lock, AlertCircle, CheckCircle, ArrowRight, BookOpen, Target, Users } from 'lucide-react';
 import './Signup.css';
 
+const getRedirectPath = (role) => (role === 'ROLE_ADMIN' ? '/admin/dashboard' : '/dashboard');
+
 export default function Signup() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -14,7 +16,7 @@ export default function Signup() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (user) navigate('/dashboard', { replace: true });
+    if (user) navigate(getRedirectPath(user.role), { replace: true });
   }, [user, navigate]);
 
   const handleChange = (e) => {

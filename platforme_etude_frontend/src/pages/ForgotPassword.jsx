@@ -17,6 +17,7 @@ import './Login.css';
 import './ForgotPassword.css';
 
 const createEmptyCode = () => ['', '', '', '', '', ''];
+const getRedirectPath = (role) => (role === 'ROLE_ADMIN' ? '/admin/dashboard' : '/dashboard');
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function ForgotPassword() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (user) navigate('/dashboard', { replace: true });
+    if (user) navigate(getRedirectPath(user.role), { replace: true });
   }, [user, navigate]);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function ForgotPassword() {
 
     try {
       const data = await requestPasswordReset(email);
-      setSuccess(data.message || 'Si cette adresse existe, un code a ete envoye.');
+      setSuccess(data.message || 'Si cette adresse existe, un code a été envoyé.');
       setStep(2);
       setTimer(60);
       setCode(createEmptyCode());
@@ -87,10 +88,10 @@ export default function ForgotPassword() {
 
     try {
       const data = await resetPassword(email, fullCode, newPassword);
-      setSuccess(data.message || 'Mot de passe mis a jour avec succes.');
+      setSuccess(data.message || 'Mot de passe mis à jour avec succès.');
       setTimeout(() => navigate('/login', { replace: true }), 1200);
     } catch (err) {
-      setError(extractMessage(err, 'Code invalide ou mot de passe refuse'));
+      setError(extractMessage(err, 'Code invalide ou mot de passe refusé'));
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ export default function ForgotPassword() {
 
     try {
       const data = await requestPasswordReset(email);
-      setSuccess(data.message || 'Un nouveau code a ete envoye si cette adresse existe.');
+      setSuccess(data.message || 'Un nouveau code a été envoyé si cette adresse existe.');
       setCode(createEmptyCode());
       setTimer(60);
       setTimeout(() => codeRefs.current[0]?.focus(), 50);
@@ -151,14 +152,14 @@ export default function ForgotPassword() {
             <div className="login-page__logo">
               <GraduationCap />
             </div>
-            <h1 className="login-page__brand-name">Platforme Etude</h1>
+            <h1 className="login-page__brand-name">Platforme Étude</h1>
           </div>
 
           <h2 className="login-page__headline">
-            Recuperez votre acces,<br />sans compromettre la securite.
+            Récupérez votre accès,<br />sans compromettre la sécurité.
           </h2>
           <p className="login-page__desc">
-            Le code de reinitialisation est temporaire, a usage unique, et votre nouveau mot de passe reste protege.
+            Le code de réinitialisation est temporaire, à usage unique, et votre nouveau mot de passe reste protégé.
           </p>
 
           <div className="login-page__features">
@@ -166,21 +167,21 @@ export default function ForgotPassword() {
               <div className="login-page__feature-icon"><Mail /></div>
               <div>
                 <strong>Code par email</strong>
-                <span>Verification rapide depuis votre adresse</span>
+                <span>Vérification rapide depuis votre adresse</span>
               </div>
             </div>
             <div className="login-page__feature">
               <div className="login-page__feature-icon"><ShieldCheck /></div>
               <div>
                 <strong>Code temporaire</strong>
-                <span>Expiration automatique apres quelques minutes</span>
+                <span>Expiration automatique après quelques minutes</span>
               </div>
             </div>
             <div className="login-page__feature">
               <div className="login-page__feature-icon"><KeyRound /></div>
               <div>
-                <strong>Sessions fermees</strong>
-                <span>Les anciens tokens sont revoques apres le changement</span>
+                <strong>Sessions fermées</strong>
+                <span>Les anciens tokens sont révoqués après le changement</span>
               </div>
             </div>
           </div>
@@ -191,7 +192,7 @@ export default function ForgotPassword() {
         <div className="login-page__form-wrapper">
           <Link to="/login" className="forgot-password__back-link">
             <ArrowLeft />
-            Retour a la connexion
+            Retour à la connexion
           </Link>
 
           {step === 1 ? (
@@ -200,8 +201,8 @@ export default function ForgotPassword() {
                 <div className="login-page__2fa-icon">
                   <KeyRound />
                 </div>
-                <h2>Mot de passe oublie</h2>
-                <p>Entrez votre adresse email pour recevoir un code de reinitialisation</p>
+                <h2>Mot de passe oublié</h2>
+                <p>Entrez votre adresse email pour recevoir un code de réinitialisation</p>
               </div>
 
               {error && (
@@ -249,7 +250,7 @@ export default function ForgotPassword() {
                   <ShieldCheck />
                 </div>
                 <h2>Nouveau mot de passe</h2>
-                <p>Entrez le code envoye a <strong>{email}</strong></p>
+                <p>Entrez le code envoyé à <strong>{email}</strong></p>
               </div>
 
               {error && (
@@ -268,7 +269,7 @@ export default function ForgotPassword() {
 
               <form onSubmit={handleResetPassword} className="login-form">
                 <div className="login-form__code-group">
-                  <label className="form-label">Code de reinitialisation</label>
+                  <label className="form-label">Code de réinitialisation</label>
                   <div className="login-form__code-inputs" onPaste={handleCodePaste}>
                     {code.map((digit, index) => (
                       <input
@@ -305,7 +306,7 @@ export default function ForgotPassword() {
                       id="forgot-new-password"
                       type="password"
                       className="form-input login-form__input-with-icon"
-                      placeholder="Minimum 8 caracteres"
+                      placeholder="Minimum 8 caractères"
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
                       required
@@ -323,7 +324,7 @@ export default function ForgotPassword() {
                       id="forgot-confirm-password"
                       type="password"
                       className="form-input login-form__input-with-icon"
-                      placeholder="Repetez le mot de passe"
+                      placeholder="Répétez le mot de passe"
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
                       required
@@ -334,7 +335,7 @@ export default function ForgotPassword() {
                 </div>
 
                 <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
-                  {loading ? 'Mise a jour...' : 'Changer le mot de passe'}
+                  {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
                 </button>
 
                 <button type="button" className="btn btn-ghost w-full" onClick={() => { setStep(1); setError(''); setSuccess(''); }}>

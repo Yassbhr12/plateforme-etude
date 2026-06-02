@@ -5,6 +5,8 @@ import { login, validateCode } from '../api/authService';
 import { GraduationCap, Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, BookOpen, Users, Target } from 'lucide-react';
 import './Login.css';
 
+const getRedirectPath = (role) => (role === 'ROLE_ADMIN' ? '/admin/dashboard' : '/dashboard');
+
 export default function Login() {
   const { saveUser, user } = useAuth();
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ export default function Login() {
   const codeRefs = useRef([]);
 
   useEffect(() => {
-    if (user) navigate('/dashboard', { replace: true });
+    if (user) navigate(getRedirectPath(user.role), { replace: true });
   }, [user, navigate]);
 
   useEffect(() => {
@@ -86,13 +88,7 @@ export default function Login() {
     try {
       const data = await validateCode(email, fullCode);
       saveUser(data.response);
-      // Redirect based on role
-      const userRole = data.response.role;
-      if (userRole === 'ROLE_ADMIN') {
-        navigate('/admin/dashboard', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      navigate(getRedirectPath(data.response.role), { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Code de validation invalide');
     } finally {
@@ -211,7 +207,7 @@ export default function Login() {
                 </div>
 
                 <div className="login-form__forgot-row">
-                  <Link to="/forgot-password">Mot de passe oublie ?</Link>
+                  <Link to="/forgot-password">Mot de passe oublié ?</Link>
                 </div>
 
                 <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>

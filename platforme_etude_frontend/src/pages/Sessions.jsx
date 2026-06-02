@@ -110,9 +110,9 @@ export default function Sessions() {
       await regenerateWeeklyPlan(generationDate || undefined);
       await loadData();
       setFilter('PLANIFIEE');
-      setPageMessage('Planning hebdomadaire genere avec succes.');
+      setPageMessage('Planning hebdomadaire généré avec succès.');
     } catch (err) {
-      setPageError(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la generation du planning');
+      setPageError(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la génération du planning');
     } finally {
       setGenerating(false);
     }
@@ -136,10 +136,10 @@ export default function Sessions() {
               className="form-input sessions__week-input"
               value={generationDate}
               onChange={(e) => setGenerationDate(e.target.value)}
-              aria-label="Date de la semaine a generer"
+              aria-label="Date de la semaine à générer"
             />
             <button className="btn btn-secondary" onClick={handleRegenerate} disabled={generating}>
-              <RefreshCw /> {generating ? 'Generation...' : 'Generer la semaine'}
+              <RefreshCw /> {generating ? 'Génération...' : 'Générer la semaine'}
             </button>
             <button className="btn btn-primary" onClick={openCreate}><Plus /> Nouvelle session</button>
           </div>
